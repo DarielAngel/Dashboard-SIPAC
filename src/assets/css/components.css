@@ -1,0 +1,90 @@
+/* Botones */
+.btn {
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 10px 15px;
+  transition: background-color 0.3s;
+}
+
+.btn-primary {
+  background-color: #35d1a0;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2bb98a;
+}
+
+/* Formularios */
+.form-control {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #344767;
+  background-color: #f0f3f9;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #35d1a0;
+  box-shadow: 0 0 0 3px rgba(53, 209, 160, 0.1);
+}
+
+/* Toggle switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+  margin-right: 10px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #35d1a0;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}

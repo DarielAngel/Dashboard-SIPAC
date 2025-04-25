@@ -1,0 +1,106 @@
+.sidebar {
+  width: 250px;
+  background-color: white;
+  padding: 20px 15px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.logo-icon {
+  width: 35px;
+  height: 35px;
+  background-color: #35d1a0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.logo h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #344767;
+  margin: 0;
+}
+
+.nav-menu {
+  margin-bottom: 20px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  color: #67748e;
+  text-decoration: none;
+  border-radius: 8px;
+  margin-bottom: 5px;
+  transition: all 0.2s;
+}
+
+.nav-item i {
+  margin-right: 10px;
+  font-size: 16px;
+}
+
+.nav-item.active {
+  background-color: #35d1a0;
+  color: white;
+}
+
+.nav-item:hover:not(.active) {
+  background-color: rgba(53, 209, 160, 0.1);
+  color: #344767;
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #a0aec0;
+  margin: 20px 0 10px 15px;
+}
+
+.help-section {
+  margin-top: auto;
+  padding: 15px;
+}
+
+.help-section p {
+  font-size: 14px;
+  font-weight: 600;
+  color: #344767;
+  margin-bottom: 10px;
+}
+
+.support-btn {
+  background-color: #f8f9fa;
+  border: none;
+  color: #67748e;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s;
+}
+
+.support-btn:hover {
+  background-color: #e9ecef;
+}
+
+@media (max-width: 992px) {
+  .sidebar {
+    width: 100%;
+    padding: 15px;
+  }
+}

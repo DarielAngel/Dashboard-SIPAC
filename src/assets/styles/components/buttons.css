@@ -1,0 +1,99 @@
+.help-button {
+  width: 100%;
+  padding: 10px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  color: #67748e;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.help-button:hover {
+  background-color: #f1f1f1;
+}
+
+.navbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  border: none;
+  background-color: #f8f9fa;
+  color: #67748e;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-settings-small {
+  padding: 8px 15px;
+  background-color: #f8f9fa;
+  border: none;
+  border-radius: 8px;
+  color: #67748e;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-settings-small:hover {
+  background-color: #e9ecef;
+}
+
+.btn-connect, .btn-message {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-connect {
+  background-color: #35d1a0;
+  color: white;
+}
+
+.btn-message {
+  background-color: #f8f9fa;
+  color: #67748e;
+}
+
+.btn-connect:hover {
+  background-color: #2bb98a;
+}
+
+.btn-message:hover {
+  background-color: #e9ecef;
+}
+
+.language-option {
+  padding: 10px 20px;
+  background-color: #f8f9fa;
+  border: none;
+  border-radius: 8px;
+  color: #67748e;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.language-option:hover {
+  background-color: #e9ecef;
+}
+
+.language-option.active {
+  background-color: #35d1a0;
+  color: white;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #67748e;
+  cursor: pointer;
+}
