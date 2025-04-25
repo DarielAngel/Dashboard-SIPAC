@@ -1,0 +1,101 @@
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  font-family: 'Open Sans', sans-serif;
+}
+
+.sidebar {
+  width: 250px;
+  background-color: white;
+  padding: 25px 20px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #eee;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+  position: fixed;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  margin-bottom: 35px;
+  position: relative;
+}
+
+.logo-icon {
+  width: 38px;
+  height: 38px;
+  background-color: #35d1a0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  margin-right: 12px;
+}
+
+.logo h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #344767;
+  margin: 0;
+}
+
+.nav-links {
+  margin-bottom: 25px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  color: #67748e;
+  text-decoration: none;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.nav-link i {
+  margin-right: 10px;
+  width: 20px;
+  text-align: center;
+}
+
+.nav-link.active, .nav-link:hover {
+  background-color: #f8f9fa;
+  color: #344767;
+}
+
+.section-title {
+  color: #344767;
+  font-size: 12px;
+  margin: 15px 0 10px;
+  font-weight: 700;
+}
+
+.help-section {
+  margin-top: auto;
+  padding: 20px 15px;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.help-section p {
+  color: #344767;
+  font-size: 14px;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.main-content {
+  margin-left: 250px;
+  padding: 30px;
+  width: calc(100% - 250px);
+}
