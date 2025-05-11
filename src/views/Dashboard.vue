@@ -15,6 +15,11 @@
         <Planes :currentSection="currentSection" @update:timeRange="handleTimeRangeUpdate"
           @applyFilters="handleApplyFilters" @resetFilters="handleResetFilters" />
       </div>
+
+      <div v-if="currentSection === 'profile'">
+        <Profile :currentSection="currentSection" @update:timeRange="handleTimeRangeUpdate"
+          @applyFilters="handleApplyFilters" @resetFilters="handleResetFilters" />
+      </div>
     </div>
 
 
@@ -40,6 +45,7 @@ import Sidebar from '../components/dashboard/sidebar.vue';
 import MainContent from '../components/paneles/MainContent.vue';
 import Actividades from '../components/paneles/Actividades.vue';
 import Planes from '../components/paneles/Planes.vue';
+import Profile from '../views/Profile.vue';
 
 const router = useRouter();
 const route = useRoute();

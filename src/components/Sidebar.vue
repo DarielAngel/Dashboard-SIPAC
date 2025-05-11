@@ -69,7 +69,7 @@ const menuItems = ref([
 
 const accountItems = ref([
   { title: 'Profile', icon: 'fas fa-user', link: '#' },
-  { title: 'Sign In', icon: 'fas fa-sign-in-alt', link: '#' },
+  // { title: 'Sign In', icon: 'fas fa-sign-in-alt', link: '#' },
   { title: 'Sign Up', icon: 'fas fa-user-plus', link: '#' },
 ]);
 </script>

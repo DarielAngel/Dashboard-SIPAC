@@ -2,8 +2,8 @@
   <div class="sidebar">
     <div class="sidebar-header">
       <div class="logo">
-        <span class="logo-icon">A</span>
-        <span class="logo-text">Argon Dashboard 2</span>
+        <span class="logo-icon">S</span>
+        <span class="logo-text">Dashboard - SIPAC</span>
       </div>
     </div>
     
@@ -45,10 +45,16 @@
       </div>
       
       <div class="section-title">ACCOUNT PAGES</div>
-      
-      <router-link to="/profile" class="menu-item" :class="{ active: activeItem === 'profile' }">
+
+      <div class="menu-item" 
+           :class="{ active: activeItem === 'profile' }"
+           @click="changeSection('profile')">
         Profile
-      </router-link>
+      </div>
+      
+      <!-- <router-link to="/profile" class="menu-item" :class="{ active: activeItem === 'profile' }">
+        Profile
+      </router-link> -->
       
       <router-link to="/login" class="menu-item" :class="{ active: activeItem === 'signin' }">
         Sign In
