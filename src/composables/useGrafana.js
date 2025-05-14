@@ -1,4 +1,6 @@
 import { ref, computed } from 'vue';
+import authService from '../services/auth.service';
+import grafanaService from '../services/grafana.service';
 
 export function useGrafana(options = {}) {
   const {
@@ -19,10 +21,23 @@ export function useGrafana(options = {}) {
   const timestamp = ref(Date.now());
   const iframeVisible = ref(true);
 
+  // Inicializar los tokens en el servicio de Grafana
+  const initializeTokens = () => {
+    const token = authService.getToken();
+    if (token) {
+      grafanaService.setDjangoToken(token);
+    }
+    if (grafanaService.grafanaToken) {
+      grafanaService.setGrafanaToken(grafanaService.grafanaToken);
+    }
+  };
+
   // URL computada para el iframe de Grafana
   const grafanaUrl = computed(() => {
+    // Inicializar los tokens antes de generar la URL
+    initializeTokens();
     // Asegurarse de usar d-solo para mostrar solo el panel
-    const baseUrl = `${grafanaBaseUrl.value}/d-solo/${dashboardId.value}`;
+    const baseUrl = `/api/grafana-proxy/d-solo/${dashboardId.value}`;
     const params = new URLSearchParams();
     
     params.append('orgId', 1);
@@ -112,12 +127,23 @@ export function useGrafana(options = {}) {
 
   // Problema 4: Verificar CORS y acceso a Grafana
   
-  Asegúrate de que Grafana esté configurado para permitir embeber paneles en iframes. Puedes agregar esta verificación:
+  // Asegúrate de que Grafana esté configurado para permitir embeber paneles en iframes. Puedes agregar esta verificación:
   
   // Verificar que Grafana esté accesible
   const checkGrafanaAccess = async () => {
     try {
-      const response = await fetch(`${grafanaBaseUrl.value}/api/health`);
+      const token = authService.getToken();
+      const headers = {
+        'Django-Token': token
+      };
+      
+      if (grafanaService.grafanaToken) {
+        headers['Grafana-Token'] = grafanaService.grafanaToken;
+      }
+      
+      const response = await fetch('/api/grafana-proxy/api/health', {
+        headers: headers
+      });
       if (response.ok) {
         console.log('Grafana está accesible');
         return true;
@@ -132,6 +158,71 @@ export function useGrafana(options = {}) {
   };
   
   // Añadir esta función al objeto retornado
+  import { ref, computed } from 'vue';
+
+  export function useGrafana() {
+    const dashboardPreferences = ref({
+      timeRange: 'now-6h',
+      theme: 'light',
+      refresh: '1h'
+    });
+  
+    // Función para obtener las preferencias del dashboard
+    const getDashboardPreferences = () => {
+      return dashboardPreferences.value;
+    };
+  
+    // Función para actualizar las preferencias del dashboard
+    const updateDashboardPreferences = (preferences) => {
+      dashboardPreferences.value = {
+        ...dashboardPreferences.value,
+        ...preferences
+      };
+    };
+  
+    const getTimeRangeParams = (timeRange) => {
+      // Si es un rango personalizado con formato timestamp/timestamp
+      if (timeRange.includes('/')) {
+        const [from, to] = timeRange.split('/');
+        return { from, to: to || 'now' };
+      }
+      
+      // Si es un rango relativo (now-6h, etc.)
+      return { from: timeRange, to: 'now' };
+    };
+  
+    const getPanelUrl = (dashboardId, panelId, timeRange, options = {}) => {
+      let url = `/grafana/d-solo/${dashboardId}?panelId=${panelId}&orgId=1`;
+      
+      // Añadir rango de tiempo
+      const { from, to } = getTimeRangeParams(timeRange);
+      url += `&from=${from}&to=${to}`;
+      
+      // Añadir opciones adicionales como variables
+      Object.entries(options).forEach(([key, value]) => {
+        if (key.startsWith('var-')) {
+          // Si ya es una variable de Grafana, añadirla directamente
+          url += `&${key}=${encodeURIComponent(value)}`;
+        } else if (key !== '_t' && key !== 'theme' && key !== 'refresh' && key !== 'kiosk') {
+          // Para otros parámetros, convertirlos en variables de Grafana
+          url += `&var-${key}=${encodeURIComponent(value)}`;
+        } else {
+          // Para parámetros especiales, añadirlos directamente
+          url += `&${key}=${encodeURIComponent(value)}`;
+        }
+      });
+      
+      return url;
+    };
+  
+    return {
+      getDashboardPreferences,
+      updateDashboardPreferences,
+      getTimeRangeParams,
+      getPanelUrl
+    };
+  }
+
   return {
     grafanaFrame,
     grafanaUrl,
@@ -144,6 +235,7 @@ export function useGrafana(options = {}) {
     refreshGrafana,
     setupAutoRefresh,
     cleanupAutoRefresh,
-    checkGrafanaAccess
+    checkGrafanaAccess,
+    getPanelUrl
   };
 }

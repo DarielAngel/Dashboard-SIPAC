@@ -12,10 +12,10 @@ const state = reactive({
   },
   grafana: {
     baseUrl: 'http://localhost:3000',
-    dashboardId: 'dehxthutoxwqob',
+    dashboardId: 'eelf40rurz9xcf',
     panels: [
-      { id: '1', title: 'Cumplimiento de actividades', subtitle: 'Actividades cumplidas por año' },
-      { id: '2', title: 'Tareas Cumplidas', subtitle: 'Distribución de tareas completadas' }
+      { id: '1', title: 'Actividades cumplidas', subtitle: 'Actividades cumplidas por año' },
+      { id: '2', title: 'Actividades en el mes', subtitle: 'Distribución actividades en el mes' }
     ],
     timeRange: 'now-6h'
   },

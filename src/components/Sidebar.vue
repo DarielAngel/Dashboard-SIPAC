@@ -62,6 +62,7 @@ const menuItems = ref([
   { title: 'Dashboard', icon: 'fas fa-home', link: '#', active: true },
   { title: 'Tables', icon: 'fas fa-table', link: '#', active: false },
   { title: 'Planes', icon: 'fas fa-table', link: '#', active: false },
+  { title: 'Prueba', icon: 'fas fa-table', link: '#', active: false },
   { title: 'Billing', icon: 'fas fa-credit-card', link: '#', active: false },
   { title: 'Virtual Reality', icon: 'fas fa-vr-cardboard', link: '#', active: false },
   { title: 'RTL', icon: 'fas fa-globe', link: '#', active: false },
@@ -69,7 +70,7 @@ const menuItems = ref([
 
 const accountItems = ref([
   { title: 'Profile', icon: 'fas fa-user', link: '#' },
-  { title: 'Sign In', icon: 'fas fa-sign-in-alt', link: '#' },
+  // { title: 'Sign In', icon: 'fas fa-sign-in-alt', link: '#' },
   { title: 'Sign Up', icon: 'fas fa-user-plus', link: '#' },
 ]);
 </script>

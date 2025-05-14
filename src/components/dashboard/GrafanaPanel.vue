@@ -23,8 +23,12 @@
         <div class="spinner"></div>
         <p>Cargando panel...</p>
       </div>
+      <div v-if="error" class="error-message">
+        <p>{{ error }}</p>
+        <button @click="refreshPanel" class="retry-btn">Reintentar</button>
+      </div>
       <iframe 
-        v-if="visible"
+        v-if="visible && !error"
         :key="localTimestamp" 
         :src="panelUrl" 
         width="100%" 
@@ -32,6 +36,7 @@
         frameborder="0"
         ref="panelFrame"
         @load="handleIframeLoad"
+        @error="handleIframeError"
         allow="fullscreen"
       ></iframe>
     </div>
@@ -39,7 +44,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 
 const props = defineProps({
   title: {
@@ -50,9 +55,9 @@ const props = defineProps({
     type: String,
     default: 'Datos en tiempo real'
   },
-  baseUrl: {
-    type: String,
-    default: 'http://localhost:3000'
+  apiParams: {
+    type: Object,
+    default: () => ({})
   },
   dashboardId: {
     type: String,
@@ -65,94 +70,267 @@ const props = defineProps({
   initialTimeRange: {
     type: String,
     default: 'now-6h'
+  },
+  authToken: {
+    type: String,
+    default: ''
   }
 });
 
-const emit = defineEmits(['update', 'refresh', 'iframe-load']);
+const emit = defineEmits(['update', 'refresh', 'iframe-load', 'error']);
 
 // Variables reactivas
 const panelFrame = ref(null);
 const localTimeRange = ref(props.initialTimeRange);
 const loading = ref(true);
+const error = ref(null);
 const refreshInterval = ref(null);
 const localTimestamp = ref(Date.now());
 const visible = ref(true);
 
 // URL computada para el iframe
 const panelUrl = computed(() => {
-  const baseUrl = `${props.baseUrl}/d-solo/${props.dashboardId}`;
-  const params = new URLSearchParams();
-  
-  params.append('orgId', 1);
-  params.append('from', localTimeRange.value);
-  params.append('to', 'now');
-  params.append('panelId', props.panelId);
-  params.append('refresh', '1h');
-  params.append('theme', 'light');
-  params.append('_t', localTimestamp.value);
-  params.append('kiosk', true);
-  
-  return `${baseUrl}?${params.toString()}`;
+  try {
+    // URL base de Grafana
+    let url = `/grafana/d-solo/${props.dashboardId}?`;
+    
+    // Parámetros básicos
+    url += `panelId=${props.panelId}&orgId=1`;
+    
+    // Rango de tiempo
+    if (localTimeRange.value.includes('/')) {
+      // Rango personalizado
+      const [from, to] = localTimeRange.value.split('/');
+      url += `&from=${from}&to=${to || 'now'}`;
+    } else {
+      // Rango relativo
+      url += `&from=${localTimeRange.value}&to=now`;
+    }
+    
+    // Añadir token como variable - IMPORTANTE: usar el nombre exacto que coincida con la variable en Grafana
+    if (props.authToken) {
+      // Usar el nombre exacto de la variable definida en Grafana (token)
+      url += `&var-token=${encodeURIComponent(props.authToken)}`;
+      
+      // También almacenar el token para que esté disponible para todas las solicitudes
+      localStorage.setItem('grafana_auth_token', props.authToken);
+      document.cookie = `grafana_auth_token=${props.authToken}; path=/`;
+      
+      console.log('Token añadido a URL:', props.authToken.substring(0, 5) + '...');
+    }
+    
+    // Añadir otras variables
+    if (props.apiParams) {
+      Object.entries(props.apiParams).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          url += `&var-${key}=${encodeURIComponent(value)}`;
+        }
+      });
+    }
+    
+    // Parámetros adicionales
+    url += `&theme=light&kiosk&refresh=5s&_t=${localTimestamp.value}`;
+    
+    console.log('URL del panel:', url);
+    return url;
+  } catch (e) {
+    console.error('Error al generar URL del panel:', e);
+    error.value = 'Error al generar URL del panel';
+    return '';
+  }
 });
 
 // Funciones para actualizar el panel
 const updatePanel = () => {
   loading.value = true;
+  error.value = null;
   localTimestamp.value = Date.now();
   emit('update', localTimeRange.value);
   
-  if (panelFrame.value) {
-    panelFrame.value.src = panelUrl.value;
-    
-    // Timeout de seguridad para quitar el loading si no se dispara el evento load
-    setTimeout(() => {
-      if (loading.value) {
-        loading.value = false;
-      }
-    }, 3000);
-  }
+  console.log('Actualizando panel con timeRange:', localTimeRange.value);
 };
 
 const handleIframeLoad = () => {
   loading.value = false;
+  error.value = null;
   emit('iframe-load');
+  console.log('Panel cargado correctamente');
 };
+
+// En el método handleIframeError, mejora el manejo de errores
+const handleIframeError = (e) => {
+  loading.value = false;
+  error.value = 'Error al cargar el panel. Verifique la conexión a Grafana y que el dashboard exista.';
+  emit('error', error.value);
+  console.error('Error al cargar el iframe:', e);
+  
+  // Intentar verificar si el dashboard existe
+  fetch(`/grafana/api/dashboards/uid/${props.dashboardId}`, {
+    headers: {
+      'Authorization': `Bearer ${props.authToken}`
+    }
+  })
+  .then(response => {
+    if (!response.ok) {
+      if (response.status === 404) {
+        error.value = `Dashboard "${props.dashboardId}" no encontrado. Verifique el ID del dashboard.`;
+      } else {
+        error.value = `Error al acceder a Grafana: ${response.status}`;
+      }
+      emit('error', error.value);
+    }
+  })
+  .catch(err => {
+    error.value = `Error de conexión con Grafana: ${err.message}`;
+    emit('error', error.value);
+  });
+};
+
+// En el método onMounted, añade verificación del dashboard
+onMounted(() => {
+  console.log('GrafanaPanel montado');
+  console.log('Dashboard ID:', props.dashboardId);
+  console.log('Panel ID:', props.panelId);
+  
+  // Verificar que Grafana está accesible
+  fetch('/grafana/api/health')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Grafana no está disponible: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Grafana está disponible:', data);
+      
+      // Verificar que el dashboard existe
+      return fetch(`/grafana/api/dashboards/uid/${props.dashboardId}`, {
+        headers: {
+          'Authorization': `Bearer ${props.authToken}`
+        }
+      });
+    })
+    .then(response => {
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error(`Dashboard "${props.dashboardId}" no encontrado`);
+        }
+        throw new Error(`Error al acceder al dashboard: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Dashboard encontrado:', data);
+    })
+    .catch(err => {
+      console.error('Error al verificar Grafana:', err);
+      error.value = err.message;
+    });
+  
+  updatePanel();
+});
 
 const refreshPanel = () => {
   updatePanel();
   emit('refresh');
 };
 
-// Configurar actualización periódica
-const setupAutoRefresh = () => {
-  if (refreshInterval.value) {
-    clearInterval(refreshInterval.value);
-  }
-  refreshInterval.value = setInterval(() => {
-    refreshPanel();
-  }, 3600000); // 1 hora
-};
-
-// Limpiar intervalos al desmontar
-const cleanupAutoRefresh = () => {
-  if (refreshInterval.value) {
-    clearInterval(refreshInterval.value);
-  }
-};
-
-// Métodos expuestos para el componente padre
-defineExpose({
-  refreshPanel,
-  updatePanel
+// Observar cambios en las props
+watch(() => props.initialTimeRange, (newValue) => {
+  localTimeRange.value = newValue;
+  updatePanel();
 });
 
-onMounted(() => {
+watch(() => props.authToken, () => {
   updatePanel();
-  setupAutoRefresh();
+});
+
+// Configurar actualización periódica
+onMounted(() => {
+  console.log('GrafanaPanel montado');
+  
+  // Configurar interceptor para añadir token a todas las solicitudes de Grafana
+  if (props.authToken) {
+    // Crear un elemento script para inyectar código que configure el token en el iframe
+    const script = document.createElement('script');
+    script.innerHTML = `
+      // Configurar token para Infinity
+      window.grafanaAuthToken = "${props.authToken}";
+      
+      // Definir la variable global para que esté disponible en todo el contexto de Grafana
+      window.grafanaVariables = window.grafanaVariables || {};
+      window.grafanaVariables.token = "${props.authToken}";
+      
+      // Interceptar solicitudes fetch para añadir el token
+      const originalFetch = window.fetch;
+      window.fetch = function(url, options) {
+        options = options || {};
+        options.headers = options.headers || {};
+        
+        // Añadir token a solicitudes de Infinity
+        if (url.includes('yesoreyeram-infinity-datasource') || url.includes('api/ds/query')) {
+          options.headers['Authorization'] = 'Token ${props.authToken}';
+          options.headers['X-Auth-Token'] = '${props.authToken}';
+          
+          // Modificar el cuerpo de la solicitud si es necesario para incluir el token
+          if (options.body) {
+            try {
+              const body = JSON.parse(options.body);
+              if (body.headers) {
+                body.headers['Authorization'] = 'Token ${props.authToken}';
+              }
+              options.body = JSON.stringify(body);
+            } catch(e) {
+              console.error('Error al modificar el cuerpo de la solicitud:', e);
+            }
+          }
+        }
+        
+        return originalFetch(url, options);
+      };
+    `;
+    
+    // Intentar inyectar el script cuando el iframe esté cargado
+    const injectScript = () => {
+      try {
+        if (panelFrame.value && panelFrame.value.contentWindow) {
+          panelFrame.value.contentWindow.document.head.appendChild(script);
+          console.log('Script de token inyectado en iframe');
+        }
+      } catch (e) {
+        console.error('Error al inyectar script:', e);
+      }
+    };
+    
+    // Añadir listener para cuando el iframe esté cargado
+    if (panelFrame.value) {
+      panelFrame.value.addEventListener('load', injectScript);
+    }
+  }
+  
+  updatePanel();
+  
+  // Verificar si Grafana está disponible
+  fetch('/grafana/api/health')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Grafana no está disponible: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Grafana está disponible:', data);
+    })
+    .catch(err => {
+      console.error('Error al verificar disponibilidad de Grafana:', err);
+      error.value = 'No se puede conectar a Grafana. Verifique que el servidor esté en ejecución.';
+    });
 });
 
 onUnmounted(() => {
-  cleanupAutoRefresh();
+  if (refreshInterval.value) {
+    clearInterval(refreshInterval.value);
+  }
 });
 </script>
 
@@ -223,6 +401,36 @@ onUnmounted(() => {
   justify-content: center;
   align-items: center;
   z-index: 10;
+}
+
+.error-message {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  padding: 20px;
+  text-align: center;
+}
+
+.error-message p {
+  color: #e74a3b;
+  margin-bottom: 15px;
+}
+
+.retry-btn {
+  background-color: #4e73df;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 .spinner {

@@ -4,8 +4,9 @@
 class GrafanaService {
   constructor() {
     // Usar la URL del proxy en lugar de la URL directa de Grafana
-    this.baseUrl = '/grafana';
-    this.apiKey = ''; // Añade tu API key de Grafana si es necesario
+    this.baseUrl = '/api/grafana-proxy';
+    this.djangoToken = '';
+    this.grafanaToken = '';
   }
 
   /**
@@ -17,11 +18,19 @@ class GrafanaService {
   }
 
   /**
-   * Set the API key for Grafana
-   * @param {string} key - The API key
+   * Set the Django token
+   * @param {string} token - The Django authentication token
    */
-  setApiKey(key) {
-    this.apiKey = key;
+  setDjangoToken(token) {
+    this.djangoToken = token;
+  }
+
+  /**
+   * Set the Grafana token
+   * @param {string} token - The Grafana API key
+   */
+  setGrafanaToken(token) {
+    this.grafanaToken = token;
   }
 
   /**
@@ -48,7 +57,13 @@ class GrafanaService {
       params.append('kiosk', true);
     }
     
+    // Agregar el token de autenticación como parámetro de la URL
+    if (this.grafanaToken) {
+      params.append('auth_token', this.grafanaToken);
+    }
+    
     return `${baseUrl}?${params.toString()}`;
+
   }
 
   /**
@@ -78,10 +93,13 @@ class GrafanaService {
    */
   async fetchDashboard(dashboardId) {
     try {
-      const headers = {};
-      if (this.apiKey) {
-        headers['Authorization'] = `Bearer ${this.apiKey}`;
-      }
+      const headers = this.getAuthHeaders();
+      
+      console.log('Headers para fetchDashboard:', {
+        ...headers,
+        'Authorization': headers['Authorization'] ? '****' : undefined,
+        'Grafana-Token': headers['Grafana-Token'] ? '****' : undefined
+      });
       
       const response = await fetch(`${this.baseUrl}/api/dashboards/uid/${dashboardId}`, {
         method: 'GET',
@@ -104,32 +122,14 @@ class GrafanaService {
    * @returns {Promise} Promise with datasources data
    */
   async getDataSources() {
-
     try {
-      const headers = {
-        'Content-Type': 'application/json'
-      };
+      const headers = this.getAuthHeaders();
       
-      // Obtener token de localStorage si está disponible
-      const userStr = localStorage.getItem('user');
-      let token = '';
-      
-      if (userStr) {
-        try {
-          const user = JSON.parse(userStr);
-          token = user.access || user.token || '';
-        } catch (e) {
-          console.error('Error al analizar datos de usuario:', e);
-        }
-      }
-      
-      if (token) {
-        headers['Authorization'] = `Token ${token}`;
-      } else if (this.apiKey) {
-        headers['Authorization'] = `Bearer ${this.apiKey}`;
-      }
-      
-      console.log('Headers para la solicitud:', headers);
+      console.log('Headers para la solicitud:', {
+        ...headers,
+        'Authorization': headers['Authorization'] ? '****' : undefined,
+        'Grafana-Token': headers['Grafana-Token'] ? '****' : undefined
+      });
       
       const response = await fetch(`${this.baseUrl}/api/datasources`, {
         method: 'GET',
@@ -149,51 +149,50 @@ class GrafanaService {
     }
   }
 
-  // Método alternativo usando XMLHttpRequest
-  async getDataSourcesAlternative() {
-    return new Promise((resolve, reject) => {
-      // Obtener el token de autenticación
-      const userStr = localStorage.getItem('user');
-      let token = '';
-      
-      if (userStr) {
-        try {
-          const user = JSON.parse(userStr);
-          token = user.access || user.token || '';
-        } catch (e) {
-          console.error('Error al parsear datos de usuario:', e);
-        }
+  // Método para obtener los headers de autenticación
+  getAuthHeaders() {
+    const headers = {
+      'Content-Type': 'application/json',
+      'Django-Token': this.djangoToken
+    };
+    
+    if (this.grafanaToken) {
+      // Asegurar que el token se envíe en el formato correcto para Grafana
+      headers['Authorization'] = `Token ${this.grafanaToken}`;
+      // Agregar el token también como Grafana-Token para compatibilidad
+      headers['Grafana-Token'] = this.grafanaToken;
+    }
+
+    // Registrar los headers para monitoreo
+    this.logRequestHeaders(headers);
+    
+    return headers;
+  }
+
+  /**
+   * Registra y valida los headers de la solicitud
+   * @param {Object} headers - Los headers de la solicitud
+   * @private
+   */
+  logRequestHeaders(headers) {
+    const timestamp = new Date().toISOString();
+    const hasAuthToken = 'Authorization' in headers;
+    const authFormat = hasAuthToken ? headers['Authorization'].startsWith('Token ') : false;
+
+    console.log(`[${timestamp}] Grafana API Request Headers:`, {
+      hasAuthToken,
+      authFormat,
+      headers: {
+        ...headers,
+        'Authorization': hasAuthToken ? '****' : undefined // Ocultar el token real por seguridad
       }
-      
-      const xhr = new XMLHttpRequest();
-      xhr.open('GET', `${this.baseUrl}/api/datasources`, true);
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      
-      if (token) {
-        xhr.setRequestHeader('Authorization', `Token ${token}`);
-      } else if (this.apiKey) {
-        xhr.setRequestHeader('Authorization', `Bearer ${this.apiKey}`);
-      }
-      
-      xhr.onload = function() {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            const data = JSON.parse(xhr.responseText);
-            resolve(data);
-          } catch (e) {
-            reject(new Error('Error parsing response: ' + e.message));
-          }
-        } else {
-          reject(new Error('Request failed with status: ' + xhr.status));
-        }
-      };
-      
-      xhr.onerror = function() {
-        reject(new Error('Network error occurred'));
-      };
-      
-      xhr.send();
     });
+
+    if (!hasAuthToken) {
+      console.warn(`[${timestamp}] Advertencia: Solicitud sin token de autorización`);
+    } else if (!authFormat) {
+      console.warn(`[${timestamp}] Advertencia: Token de autorización con formato incorrecto`);
+    }
   }
 
   /**
@@ -203,13 +202,7 @@ class GrafanaService {
    */
   async getDataSource(id) {
     try {
-      const headers = {
-        'Content-Type': 'application/json'
-      };
-      
-      if (this.apiKey) {
-        headers['Authorization'] = `Bearer ${this.apiKey}`;
-      }
+      const headers = this.getAuthHeaders();
       
       const response = await fetch(`${this.baseUrl}/api/datasources/${id}`, {
         method: 'GET',
@@ -260,13 +253,7 @@ class GrafanaService {
       // Reset secure JSON fields to update the secure values
       datasource.secureJsonFields = {};
       
-      const headers = {
-        'Content-Type': 'application/json'
-      };
-      
-      if (this.apiKey) {
-        headers['Authorization'] = `Bearer ${this.apiKey}`;
-      }
+      const headers = this.getAuthHeaders();
       
       const response = await fetch(`${this.baseUrl}/api/datasources/${id}`, {
         method: 'PUT',
@@ -292,7 +279,7 @@ class GrafanaService {
    * @returns {Promise} Promise with updated datasource data
    */
   async updateDataSourceWithToken(id, token) {
-    // Typically you would use 'Authorization' as the key name and 'Bearer {token}' as the value
+    // Configurar el token en el formato correcto para la API
     return this.updateDataSourceAuth(id, 'Authorization', `Token ${token}`, 'Header');
   }
 }

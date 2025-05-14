@@ -18,9 +18,9 @@
     <div class="dashboard-panels">
       <!-- Panel principal (Grafana) -->
       <div class="main-panel">
-        <GrafanaPanel :title="dashboardStore.state.grafana.panels[0].title"
-          :subtitle="dashboardStore.state.grafana.panels[0].subtitle" :baseUrl="dashboardStore.state.grafana.baseUrl"
-          :dashboardId="dashboardStore.state.grafana.dashboardId" :panelId="dashboardStore.state.grafana.panels[0].id"
+        <GrafanaPanel :title="dashboardStore.state.grafana.panels[1].title"
+          :subtitle="dashboardStore.state.grafana.panels[1].subtitle" :baseUrl="dashboardStore.state.grafana.baseUrl"
+          :dashboardId="dashboardStore.state.grafana.dashboardId" :panelId="dashboardStore.state.grafana.panels[1].id"
           :initialTimeRange="dashboardStore.state.grafana.timeRange" @update="handleTimeRangeUpdate" />
       </div>
 

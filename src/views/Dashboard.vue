@@ -15,17 +15,21 @@
         <Planes :currentSection="currentSection" @update:timeRange="handleTimeRangeUpdate"
           @applyFilters="handleApplyFilters" @resetFilters="handleResetFilters" />
       </div>
+
+      <div v-if="currentSection === 'pruebas'">
+        <h2>Pruebas</h2>
+        <MainContent :currentSection="currentSection" @update:timeRange="handleTimeRangeUpdate"
+          @applyFilters="handleApplyFilters" @resetFilters="handleResetFilters" />
+      </div>
+
+      <div v-if="currentSection === 'profile'">
+        <Profile :currentSection="currentSection" @update:timeRange="handleTimeRangeUpdate"
+          @applyFilters="handleApplyFilters" @resetFilters="handleResetFilters" />
+      </div>
+
+
     </div>
 
-
-
-    <!-- Main Content Component -->
-    <!-- <MainContent 
-      :currentSection="currentSection"
-      @update:timeRange="handleTimeRangeUpdate"
-      @applyFilters="handleApplyFilters"
-      @resetFilters="handleResetFilters"
-    /> -->
   </div>
 </template>
 
@@ -40,6 +44,7 @@ import Sidebar from '../components/dashboard/sidebar.vue';
 import MainContent from '../components/paneles/MainContent.vue';
 import Actividades from '../components/paneles/Actividades.vue';
 import Planes from '../components/paneles/Planes.vue';
+import Profile from '../views/Profile.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -103,6 +108,8 @@ onMounted(() => {
   // Determinar la sección inicial basada en la URL
   const path = route.path;
   if (path.includes('/tables')) currentSection.value = 'tables';
+  else if (path.includes('/planes')) currentSection.value = 'planes';
+  else if (path.includes('/pruebas')) currentSection.value = 'pruebas';
   else if (path.includes('/billing')) currentSection.value = 'billing';
   else if (path.includes('/virtual-reality')) currentSection.value = 'virtual-reality';
   else if (path.includes('/rtl')) currentSection.value = 'rtl';

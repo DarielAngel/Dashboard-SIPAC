@@ -3,8 +3,6 @@
     <!-- TopBar Component -->
     <TopBar :user="currentUser" />
     
-    <!-- Contenido dinámico basado en la sección seleccionada -->
-    <div v-if="currentSection === 'dashboard'">
       <!-- Stats Cards Section -->
       <div class="stats-cards">
         <StatCard 
@@ -24,12 +22,13 @@
         <!-- Panel principal (Grafana) -->
         <div class="main-panel">
           <GrafanaPanel 
-            :title="dashboardStore.state.grafana.panels[0].title"
-            :subtitle="dashboardStore.state.grafana.panels[0].subtitle"
-            :baseUrl="dashboardStore.state.grafana.baseUrl" 
-            :dashboardId="dashboardStore.state.grafana.dashboardId" 
-            :panelId="dashboardStore.state.grafana.panels[0].id"
-            :initialTimeRange="dashboardStore.state.grafana.timeRange"
+            title="Panel de Grafana"
+            subtitle="Datos en tiempo real"
+            dashboardId="eelf40rurz9xcf" 
+            panelId="1"
+            :initialTimeRange="selectedTimeRange"
+            :authToken="apiToken"
+            :apiParams="getApiParams()"
             @update="handleTimeRangeUpdate"
           />
         </div>
@@ -48,6 +47,25 @@
                 <option value="now-24h">Últimas 24 horas</option>
                 <option value="now-7d">Última semana</option>
                 <option value="now-30d">Último mes</option>
+              </select>
+            </div>
+            
+            <!-- Nuevos filtros para mes y año -->
+            <div class="filter-section">
+              <label>Mes</label>
+              <select v-model="selectedMonth" @change="updateDateFilters">
+                <option v-for="(month, index) in months" :key="index" :value="index">
+                  {{ month }}
+                </option>
+              </select>
+            </div>
+            
+            <div class="filter-section">
+              <label>Año</label>
+              <select v-model="selectedYear" @change="updateDateFilters">
+                <option v-for="year in years" :key="year" :value="year">
+                  {{ year }}
+                </option>
               </select>
             </div>
             
@@ -114,64 +132,18 @@
               </div>
             </div>
           </div>
+
         </div>
+
       </div>
-      
-      <!-- Activity Charts Section -->
-      <div class="charts-section">
-        <ActivityChart 
-          title="Actividades Mensuales" 
-          :data="dashboardStore.state.activities" 
-          :loading="dashboardStore.state.loading.activities"
-          @period-change="handleActivityPeriodChange"
-        />
-        
-        <ActivityChart 
-          title="Distribución de Tareas" 
-          :data="dashboardStore.state.tasks" 
-          :loading="dashboardStore.state.loading.tasks"
-          chartType="pie"
-          @period-change="handleTaskPeriodChange"
-        />
-      </div>
-    </div>
+       
     
-    <div v-else-if="currentSection === 'tables'">
-      <div class="section-content">
-        <h2>Tables Section</h2>
-        <p>This is the tables section content.</p>
-        <!-- Aquí irían los componentes específicos de la sección Tables -->
-      </div>
-    </div>
-    
-    <div v-else-if="currentSection === 'billing'">
-      <div class="section-content">
-        <h2>Billing Section</h2>
-        <p>This is the billing section content.</p>
-        <!-- Aquí irían los componentes específicos de la sección Billing -->
-      </div>
-    </div>
-    
-    <div v-else-if="currentSection === 'virtual-reality'">
-      <div class="section-content">
-        <h2>Virtual Reality Section</h2>
-        <p>This is the virtual reality section content.</p>
-        <!-- Aquí irían los componentes específicos de la sección Virtual Reality -->
-      </div>
-    </div>
-    
-    <div v-else-if="currentSection === 'rtl'">
-      <div class="section-content">
-        <h2>RTL Section</h2>
-        <p>This is the RTL section content.</p>
-        <!-- Aquí irían los componentes específicos de la sección RTL -->
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+// Importar servicios necesarios
+import { ref, computed, onMounted } from 'vue';
 import authService from '../../services/auth.service';
 import dashboardStore from '../../store/dashboard.store';
 import { formatNumber } from '../../utils/dashboard.utils';
@@ -180,7 +152,6 @@ import { formatNumber } from '../../utils/dashboard.utils';
 import TopBar from '../dashboard/TopBar.vue';
 import StatCard from '../dashboard/StatCard.vue';
 import GrafanaPanel from '../dashboard/GrafanaPanel.vue';
-import ActivityChart from '../dashboard/ActivityChart.vue';
 
 // Props
 const props = defineProps({
@@ -207,6 +178,23 @@ const taskFilters = ref({
   inProgress: true,
   pending: true
 });
+
+// Nuevas variables para filtros de mes y año
+const currentDate = new Date();
+const selectedMonth = ref(currentDate.getMonth());
+const selectedYear = ref(currentDate.getFullYear());
+
+// Array de meses para el selector
+const months = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
+
+// Generar array de años (desde 5 años atrás hasta el actual)
+const years = Array.from(
+  { length: 6 }, 
+  (_, i) => currentDate.getFullYear() - 5 + i
+);
 
 // Actividades recientes computadas
 const recentActivities = computed(() => {
@@ -243,6 +231,27 @@ const applyTimeRangeFilter = () => {
   emit('update:timeRange', selectedTimeRange.value);
 };
 
+// Nueva función para manejar cambios en los filtros de fecha
+const updateDateFilters = () => {
+  // Crear una fecha con el mes y año seleccionados
+  const startDate = new Date(selectedYear.value, selectedMonth.value, 1);
+  const endDate = new Date(selectedYear.value, selectedMonth.value + 1, 0); // Último día del mes
+  
+  // Formatear fechas para Grafana (formato Unix timestamp en milisegundos)
+  const fromTime = startDate.getTime();
+  const toTime = endDate.getTime();
+  
+  // Actualizar el timeRange con un rango personalizado
+  const customTimeRange = `${fromTime}/${toTime}`;
+  selectedTimeRange.value = customTimeRange;
+  
+  // Aplicar el filtro
+  dashboardStore.updateTimeRange(customTimeRange);
+  emit('update:timeRange', customTimeRange);
+  
+  console.log(`Filtro aplicado: ${months[selectedMonth.value]} ${selectedYear.value}`);
+};
+
 const applyFilters = () => {
   // Aplicar todos los filtros seleccionados
   dashboardStore.updateTimeRange(selectedTimeRange.value);
@@ -267,6 +276,10 @@ const resetFilters = () => {
   // Restablecer todos los filtros a sus valores predeterminados
   selectedTimeRange.value = 'now-6h';
   
+  // Restablecer filtros de mes y año al mes y año actual
+  selectedMonth.value = currentDate.getMonth();
+  selectedYear.value = currentDate.getFullYear();
+  
   activityFilters.value = {
     videoconference: true,
     meetings: true,
@@ -284,6 +297,72 @@ const resetFilters = () => {
   dashboardStore.fetchDashboardData();
   emit('resetFilters');
 };
+
+// Token de autenticación para la API
+const apiToken = computed(() => {
+  const user = authService.getCurrentUser();
+  return user && user.token ? user.token : '';
+});
+
+// Modificar esta función para incluir parámetros adicionales que podrían ser necesarios
+const getApiParams = () => {
+  // Crear un objeto con todos los parámetros necesarios para la API
+  return {
+    month: selectedMonth.value + 1,
+    year: selectedYear.value,
+    // No es necesario incluir el token aquí, ya que se pasará como prop separado
+    // Añadir parámetros adicionales que podrían ser necesarios
+    format: 'json',
+    // Si la API espera filtros específicos, añadirlos aquí
+    filters: JSON.stringify({
+      activities: Object.entries(activityFilters.value)
+        .filter(([_, value]) => value)
+        .map(([key]) => key),
+      tasks: Object.entries(taskFilters.value)
+        .filter(([_, value]) => value)
+        .map(([key]) => key)
+    })
+  };
+};
+
+onMounted(() => {
+  console.log('MainContent montado');
+  
+  // Verificar que tenemos un token válido
+  if (apiToken.value) {
+    console.log('Token API disponible:', apiToken.value.substring(0, 5) + '...');
+    
+    // Verificar que el dashboard existe en Grafana
+    fetch(`/grafana/api/dashboards/uid/eelf40rurz9xcf`, {
+      headers: {
+        'Authorization': `Bearer ${apiToken.value}`
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        console.error('Error al verificar dashboard:', response.status);
+        // Si el dashboard no existe, mostrar un mensaje de error
+        if (response.status === 404) {
+          console.error('Dashboard no encontrado. Verifica el ID del dashboard.');
+        }
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Dashboard info:', data);
+    })
+    .catch(err => {
+      console.error('Error al verificar dashboard:', err);
+    });
+  } else {
+    console.error('No hay token de autenticación disponible');
+  }
+  
+  // Inicializar datos del dashboard si es necesario
+  if (!dashboardStore.state.initialized) {
+    dashboardStore.fetchDashboardData();
+  }
+});
 </script>
 
 <style scoped>

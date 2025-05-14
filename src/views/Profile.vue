@@ -1,237 +1,179 @@
 <template>
-  <div class="app-container">
-    <div class="sidebar">
-      <div class="logo">
-        <div class="logo-icon">A</div>
-        <h3>Argon Dashboard 2</h3>
+
+  <TopBar :user="currentUser" />
+
+  <div>
+    <!-- Barra superior con botones de acción -->
+    <div class="top-navbar">
+      <div class="search-container">
+        <input type="text" placeholder="Type here..." class="search-input" />
       </div>
-      
-      <div class="nav-links">
-        <router-link to="/dashboard" class="nav-link">
-          <i class="fas fa-home"></i>
-          <span>Dashboard</span>
-        </router-link>
-        <router-link to="/tables" class="nav-link">
-          <i class="fas fa-table"></i>
-          <span>Tables</span>
-        </router-link>
-        <router-link to="/billing" class="nav-link">
-          <i class="fas fa-credit-card"></i>
-          <span>Billing</span>
-        </router-link>
-        <router-link to="/virtual-reality" class="nav-link">
-          <i class="fas fa-vr-cardboard"></i>
-          <span>Virtual Reality</span>
-        </router-link>
-        <router-link to="/rtl" class="nav-link">
-          <i class="fas fa-align-right"></i>
-          <span>RTL</span>
-        </router-link>
-      </div>
-      
-      <div class="account-section">
-        <h6 class="section-title">ACCOUNT PAGES</h6>
-        <div class="nav-links">
-          <router-link to="/profile" class="nav-link active">
-            <i class="fas fa-user"></i>
-            <span>Profile</span>
-          </router-link>
-          <router-link to="/login" class="nav-link">
-            <i class="fas fa-sign-in-alt"></i>
-            <span>Sign In</span>
-          </router-link>
-          <router-link to="/register" class="nav-link">
-            <i class="fas fa-user-plus"></i>
-            <span>Sign Up</span>
-          </router-link>
-        </div>
-      </div>
-      
-      <div class="help-section">
-        <p>{{ $t('needHelp') }}</p>
-        <button class="help-button">{{ $t('contactSupport') }}</button>
+      <div class="navbar-actions">
+        <button class="navbar-btn">
+          <i class="fas fa-user"></i>
+          <span>Sign In</span>
+        </button>
+        <button class="navbar-btn" @click="toggleSettingsPanel">
+          <i class="fas fa-cog"></i>
+          <span>Settings</span>
+        </button>
+        <button class="navbar-btn language-btn" @click="toggleLanguage">
+          {{ currentLanguage === 'en' ? 'ES' : 'EN' }}
+        </button>
       </div>
     </div>
-    
-    <div class="main-content">
-      <!-- Barra superior con botones de acción -->
-      <div class="top-navbar">
-        <div class="search-container">
-          <input type="text" placeholder="Type here..." class="search-input" />
+
+    <div class="profile-header">
+      <div class="user-info">
+        <img src="@/assets/img/profile-avatar.jpg" alt="Sayo Kravits" class="user-avatar" />
+        <div class="user-details">
+          <h2>Sayo Kravits</h2>
+          <p>{{ $t('publicRelations') }}</p>
         </div>
-        <div class="navbar-actions">
-          <button class="navbar-btn">
-            <i class="fas fa-user"></i>
-            <span>Sign In</span>
-          </button>
-          <button class="navbar-btn" @click="toggleSettingsPanel">
-            <i class="fas fa-cog"></i>
-            <span>Settings</span>
-          </button>
-          <button class="navbar-btn language-btn" @click="toggleLanguage">
-            {{ currentLanguage === 'en' ? 'ES' : 'EN' }}
-          </button>
+      </div>
+    </div>
+
+    <!-- Panel de configuraciones -->
+    <div class="settings-panel" v-if="showSettingsPanel">
+      <div class="settings-header">
+        <h3>{{ $t('settingsPanel') }}</h3>
+        <button class="btn-close" @click="toggleSettingsPanel">×</button>
+      </div>
+      <div class="settings-content">
+        <div class="settings-group">
+          <h4>{{ $t('language') }}</h4>
+          <div class="language-options">
+            <button class="language-option" :class="{ active: currentLanguage === 'en' }" @click="changeLanguage('en')">
+              English
+            </button>
+            <button class="language-option" :class="{ active: currentLanguage === 'es' }" @click="changeLanguage('es')">
+              Español
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overlay para cuando el panel está abierto -->
+    <div class="settings-overlay" v-if="showSettingsPanel" @click="toggleSettingsPanel"></div>
+
+    <div class="profile-content">
+      <div class="edit-profile">
+        <div class="section-header">
+          <h3>{{ $t('editProfile') }}</h3>
+          <button class="btn-settings-small">{{ $t('settings') }}</button>
+        </div>
+
+        <div class="form-section">
+          <h4>{{ $t('userInformation') }}</h4>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>{{ $t('username') }}</label>
+              <input type="text" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label>{{ $t('emailAddress') }}</label>
+              <input type="email" class="form-control" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>First name</label>
+              <input type="text" class="form-control" value="Jesse" />
+            </div>
+            <div class="form-group">
+              <label>Last name</label>
+              <input type="text" class="form-control" />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h4>CONTACT INFORMATION</h4>
+
+          <div class="form-group full-width">
+            <label>Address</label>
+            <input type="text" class="form-control" />
+          </div>
+
+          <div class="form-row three-columns">
+            <div class="form-group">
+              <label>City</label>
+              <input type="text" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label>Country</label>
+              <input type="text" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label>Postal code</label>
+              <input type="text" class="form-control" />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h4>ABOUT ME</h4>
+
+          <div class="form-group full-width">
+            <label>About me</label>
+            <textarea class="form-control" rows="4"></textarea>
+          </div>
         </div>
       </div>
 
-      <div class="profile-header">
-        <div class="user-info">
-          <img src="@/assets/img/profile-avatar.jpg" alt="Sayo Kravits" class="user-avatar" />
-          <div class="user-details">
-            <h2>Sayo Kravits</h2>
-            <p>{{ $t('publicRelations') }}</p>
+      <div class="profile-card">
+        <div class="card-header">
+          <img src="@/assets/img/university-bg.jpg" alt="Background" class="card-bg" />
+          <img src="@/assets/img/profile-avatar2.jpg" alt="Mark Davis" class="card-avatar" />
+        </div>
+
+        <div class="card-stats">
+          <div class="stat-item">
+            <div class="stat-value">22</div>
+            <div class="stat-label">Friends</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">10</div>
+            <div class="stat-label">Photos</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">89</div>
+            <div class="stat-label">Comments</div>
+          </div>
+        </div>
+
+        <div class="card-info">
+          <h3>Mark Davis <span>, 35</span></h3>
+          <p class="location">Bucharest, Romania</p>
+          <p class="position">Solution Manager - Creative Tim Officer</p>
+          <p class="university">University of Computer Science</p>
+
+          <div class="card-actions">
+            <button class="btn-connect">Connect</button>
+            <button class="btn-message">Message</button>
           </div>
         </div>
       </div>
-      
-      <!-- Panel de configuraciones -->
-      <div class="settings-panel" v-if="showSettingsPanel">
-        <div class="settings-header">
-          <h3>{{ $t('settingsPanel') }}</h3>
-          <button class="btn-close" @click="toggleSettingsPanel">×</button>
-        </div>
-        <div class="settings-content">
-          <div class="settings-group">
-            <h4>{{ $t('language') }}</h4>
-            <div class="language-options">
-              <button 
-                class="language-option" 
-                :class="{ active: currentLanguage === 'en' }"
-                @click="changeLanguage('en')"
-              >
-                English
-              </button>
-              <button 
-                class="language-option" 
-                :class="{ active: currentLanguage === 'es' }"
-                @click="changeLanguage('es')"
-              >
-                Español
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Overlay para cuando el panel está abierto -->
-      <div class="settings-overlay" v-if="showSettingsPanel" @click="toggleSettingsPanel"></div>
-      
-      <div class="profile-content">
-        <div class="edit-profile">
-          <div class="section-header">
-            <h3>{{ $t('editProfile') }}</h3>
-            <button class="btn-settings-small">{{ $t('settings') }}</button>
-          </div>
-          
-          <div class="form-section">
-            <h4>{{ $t('userInformation') }}</h4>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label>{{ $t('username') }}</label>
-                <input type="text" class="form-control" />
-              </div>
-              <div class="form-group">
-                <label>{{ $t('emailAddress') }}</label>
-                <input type="email" class="form-control" />
-              </div>
-            </div>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label>First name</label>
-                <input type="text" class="form-control" value="Jesse" />
-              </div>
-              <div class="form-group">
-                <label>Last name</label>
-                <input type="text" class="form-control" />
-              </div>
-            </div>
-          </div>
-          
-          <div class="form-section">
-            <h4>CONTACT INFORMATION</h4>
-            
-            <div class="form-group full-width">
-              <label>Address</label>
-              <input type="text" class="form-control" />
-            </div>
-            
-            <div class="form-row three-columns">
-              <div class="form-group">
-                <label>City</label>
-                <input type="text" class="form-control" />
-              </div>
-              <div class="form-group">
-                <label>Country</label>
-                <input type="text" class="form-control" />
-              </div>
-              <div class="form-group">
-                <label>Postal code</label>
-                <input type="text" class="form-control" />
-              </div>
-            </div>
-          </div>
-          
-          <div class="form-section">
-            <h4>ABOUT ME</h4>
-            
-            <div class="form-group full-width">
-              <label>About me</label>
-              <textarea class="form-control" rows="4"></textarea>
-            </div>
-          </div>
-        </div>
-        
-        <div class="profile-card">
-          <div class="card-header">
-            <img src="@/assets/img/university-bg.jpg" alt="Background" class="card-bg" />
-            <img src="@/assets/img/profile-avatar2.jpg" alt="Mark Davis" class="card-avatar" />
-          </div>
-          
-          <div class="card-stats">
-            <div class="stat-item">
-              <div class="stat-value">22</div>
-              <div class="stat-label">Friends</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">10</div>
-              <div class="stat-label">Photos</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">89</div>
-              <div class="stat-label">Comments</div>
-            </div>
-          </div>
-          
-          <div class="card-info">
-            <h3>Mark Davis <span>, 35</span></h3>
-            <p class="location">Bucharest, Romania</p>
-            <p class="position">Solution Manager - Creative Tim Officer</p>
-            <p class="university">University of Computer Science</p>
-            
-            <div class="card-actions">
-              <button class="btn-connect">Connect</button>
-              <button class="btn-message">Message</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="footer">
-        <p>© 2023, {{ $t('madeWith') }} ❤️ {{ $t('byCreativeTim') }}</p>
-        <div class="footer-links">
-          <a href="#">Creative Tim</a>
-          <a href="#">{{ $t('aboutUs') }}</a>
-          <a href="#">Blog</a>
-          <a href="#">{{ $t('license') }}</a>
-        </div>
+    </div>
+
+    <div class="footer">
+      <p>© 2023, {{ $t('madeWith') }} ❤️ {{ $t('byCreativeTim') }}</p>
+      <div class="footer-links">
+        <a href="#">Creative Tim</a>
+        <a href="#">{{ $t('aboutUs') }}</a>
+        <a href="#">Blog</a>
+        <a href="#">{{ $t('license') }}</a>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import TopBar from '../components/dashboard/TopBar.vue'
+
 import { ref } from 'vue';
 
 // Estado para el panel de configuraciones
@@ -260,19 +202,6 @@ const toggleLanguage = () => {
   min-height: 100vh;
   background-color: #f8f9fa;
   font-family: 'Open Sans', sans-serif;
-}
-
-.sidebar {
-  width: 250px;
-  background-color: white;
-  padding: 25px 20px;
-  display: flex;
-  flex-direction: column;
-  border-right: 1px solid #eee;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-  position: fixed;
-  height: 100vh;
-  overflow-y: auto;
 }
 
 .logo {
@@ -323,7 +252,8 @@ const toggleLanguage = () => {
   text-align: center;
 }
 
-.nav-link.active, .nav-link:hover {
+.nav-link.active,
+.nav-link:hover {
   background-color: #f8f9fa;
   color: #344767;
 }
@@ -465,7 +395,8 @@ const toggleLanguage = () => {
   margin-bottom: 35px;
 }
 
-.edit-profile, .profile-card {
+.edit-profile,
+.profile-card {
   background-color: white;
   border-radius: 15px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
@@ -654,7 +585,8 @@ textarea.form-control {
   margin-top: 20px;
 }
 
-.btn-connect, .btn-message {
+.btn-connect,
+.btn-message {
   padding: 8px 20px;
   border: none;
   border-radius: 8px;
