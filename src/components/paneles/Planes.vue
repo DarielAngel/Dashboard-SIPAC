@@ -7,23 +7,35 @@
 
     <!-- Stats Cards Section -->
     <div class="stats-cards">
-      <StatCard title="TODAY'S MONEY" :value="`$${formatNumber(dashboardStore.state.stats.money.value)}`"
-        :change="`${dashboardStore.state.stats.money.change}% since ${dashboardStore.state.stats.money.period}`"
-        :period="`since ${dashboardStore.state.stats.money.period}`" icon="fas fa-dollar-sign" iconColor="#4e73df"
-        :isPositive="dashboardStore.state.stats.money.isPositive" />
-
+      <StatCard 
+        title="TODAY'S MONEY" 
+        :value="`$${formatNumber(dashboardStore.state.stats.money.value)}`" 
+        :change="`${dashboardStore.state.stats.money.change}% since ${dashboardStore.state.stats.money.period}`" 
+        :period="`since ${dashboardStore.state.stats.money.period}`" 
+        icon="fas fa-dollar-sign" 
+        iconColor="#4e73df" 
+        :isPositive="dashboardStore.state.stats.money.isPositive" 
+      />
+      
       <!-- Resto de las StatCards... -->
     </div>
 
     <div class="dashboard-panels">
       <!-- Panel principal (Grafana) -->
       <div class="main-panel">
-        <GrafanaPanel :title="dashboardStore.state.grafana.panels[1].title"
-          :subtitle="dashboardStore.state.grafana.panels[1].subtitle" :baseUrl="dashboardStore.state.grafana.baseUrl"
-          :dashboardId="dashboardStore.state.grafana.dashboardId" :panelId="dashboardStore.state.grafana.panels[1].id"
-          :initialTimeRange="dashboardStore.state.grafana.timeRange" @update="handleTimeRangeUpdate" />
+        <GrafanaPanel 
+          :title="dashboardStore.state.grafana.panels[1].title"
+          :subtitle="dashboardStore.state.grafana.panels[1].subtitle"
+          :baseUrl="dashboardStore.state.grafana.baseUrl" 
+          :dashboardId="dashboardStore.state.grafana.dashboardId" 
+          :panelId="dashboardStore.state.grafana.panels[1].id"
+          :initialTimeRange="selectedTimeRange"
+          :authToken="apiToken"
+          :apiParams="getApiParams()"
+          @update="handleTimeRangeUpdate"
+        />
       </div>
-
+      
       <!-- Panel de filtros -->
       <div class="filter-panel">
         <div class="filter-card">
@@ -40,60 +52,74 @@
               <option value="now-30d">Último mes</option>
             </select>
           </div>
-
+          
+          <!-- Filtros para mes y año -->
           <div class="filter-section">
-            <label>Tipo de actividad</label>
+            <label>Mes</label>
+            <select v-model="selectedMonth" @change="updateDateFilters">
+              <option v-for="(month, index) in months" :key="index" :value="index">
+                {{ month }}
+              </option>
+            </select>
+          </div>
+          
+          <div class="filter-section">
+            <label>Año</label>
+            <select v-model="selectedYear" @change="updateDateFilters">
+              <option v-for="year in years" :key="year" :value="year">
+                {{ year }}
+              </option>
+            </select>
+          </div>
+          
+          <div class="filter-section">
+            <label>Tipo de plan</label>
             <div class="checkbox-group">
               <div class="checkbox-item">
-                <input type="checkbox" id="activity-type-1" v-model="activityFilters.videoconference">
-                <label for="activity-type-1">Videoconferencia</label>
+                <input type="checkbox" id="plan-type-1" v-model="planFilters.strategic">
+                <label for="plan-type-1">Estratégico</label>
               </div>
               <div class="checkbox-item">
-                <input type="checkbox" id="activity-type-2" v-model="activityFilters.meetings">
-                <label for="activity-type-2">Reuniones</label>
+                <input type="checkbox" id="plan-type-2" v-model="planFilters.operational">
+                <label for="plan-type-2">Operativo</label>
               </div>
               <div class="checkbox-item">
-                <input type="checkbox" id="activity-type-3" v-model="activityFilters.tasks">
-                <label for="activity-type-3">Tareas</label>
+                <input type="checkbox" id="plan-type-3" v-model="planFilters.project">
+                <label for="plan-type-3">Proyecto</label>
               </div>
             </div>
           </div>
-
+          
           <div class="filter-section">
-            <label>Estado de tareas</label>
+            <label>Estado del plan</label>
             <div class="checkbox-group">
               <div class="checkbox-item">
-                <input type="checkbox" id="task-status-1" v-model="taskFilters.completed">
-                <label for="task-status-1">Completadas</label>
+                <input type="checkbox" id="plan-status-1" v-model="statusFilters.completed">
+                <label for="plan-status-1">Completado</label>
               </div>
               <div class="checkbox-item">
-                <input type="checkbox" id="task-status-2" v-model="taskFilters.inProgress">
-                <label for="task-status-2">En progreso</label>
+                <input type="checkbox" id="plan-status-2" v-model="statusFilters.inProgress">
+                <label for="plan-status-2">En progreso</label>
               </div>
               <div class="checkbox-item">
-                <input type="checkbox" id="task-status-3" v-model="taskFilters.pending">
-                <label for="task-status-3">Pendientes</label>
+                <input type="checkbox" id="plan-status-3" v-model="statusFilters.pending">
+                <label for="plan-status-3">Pendiente</label>
               </div>
             </div>
           </div>
-
+          
           <div class="filter-actions">
             <button class="apply-btn" @click="applyFilters">Aplicar filtros</button>
             <button class="reset-btn" @click="resetFilters">Restablecer</button>
           </div>
         </div>
-
-
       </div>
     </div>
-
-
-
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import authService from '../../services/auth.service';
 import dashboardStore from '../../store/dashboard.store';
 import { formatNumber } from '../../utils/dashboard.utils';
@@ -102,7 +128,6 @@ import { formatNumber } from '../../utils/dashboard.utils';
 import TopBar from '../dashboard/TopBar.vue';
 import StatCard from '../dashboard/StatCard.vue';
 import GrafanaPanel from '../dashboard/GrafanaPanel.vue';
-import ActivityChart from '../dashboard/ActivityChart.vue';
 
 // Props
 const props = defineProps({
@@ -119,29 +144,54 @@ const currentUser = ref(authService.getCurrentUser());
 
 // Variables para filtros
 const selectedTimeRange = ref('now-6h');
-const activityFilters = ref({
-  videoconference: true,
-  meetings: true,
-  tasks: true
+const planFilters = ref({
+  strategic: true,
+  operational: true,
+  project: true
 });
-const taskFilters = ref({
+const statusFilters = ref({
   completed: true,
   inProgress: true,
   pending: true
 });
 
-// Actividades recientes computadas
-const recentActivities = computed(() => {
-  // Aquí podrías filtrar las actividades según los filtros seleccionados
-  return dashboardStore.state.activities.slice(0, 5); // Mostrar solo las 5 primeras
+// Variables para filtros de mes y año
+const currentDate = new Date();
+const selectedMonth = ref(currentDate.getMonth());
+const selectedYear = ref(currentDate.getFullYear());
+
+// Array de meses para el selector
+const months = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
+
+// Generar array de años (desde 5 años atrás hasta el actual)
+const years = Array.from(
+  { length: 6 }, 
+  (_, i) => currentDate.getFullYear() - 5 + i
+);
+
+// Obtener token de autenticación del usuario actual
+const apiToken = computed(() => {
+  return authService.getToken();
 });
 
-// Función para obtener color según tipo de actividad
-const getActivityColor = (activity) => {
-  // Asignar colores según el tipo o valor de la actividad
-  if (activity.value > 70) return '#4CAF50'; // Verde para valores altos
-  if (activity.value > 40) return '#FFC107'; // Amarillo para valores medios
-  return '#F44336'; // Rojo para valores bajos
+// Función para obtener parámetros para la API
+const getApiParams = () => {
+  return {
+    month: selectedMonth.value + 1,
+    year: selectedYear.value,
+    format: 'json',
+    filters: JSON.stringify({
+      plans: Object.entries(planFilters.value)
+        .filter(([_, value]) => value)
+        .map(([key]) => key),
+      status: Object.entries(statusFilters.value)
+        .filter(([_, value]) => value)
+        .map(([key]) => key)
+    })
+  };
 };
 
 // Funciones para manejar cambios en los componentes
@@ -151,61 +201,111 @@ const handleTimeRangeUpdate = (newTimeRange) => {
   emit('update:timeRange', newTimeRange);
 };
 
-const handleActivityPeriodChange = (period) => {
-  dashboardStore.fetchActivities(period);
-};
-
-const handleTaskPeriodChange = (period) => {
-  dashboardStore.fetchTasks(period);
-};
-
 // Funciones para los filtros
 const applyTimeRangeFilter = () => {
   dashboardStore.updateTimeRange(selectedTimeRange.value);
   emit('update:timeRange', selectedTimeRange.value);
 };
 
+// Función para manejar cambios en los filtros de fecha
+const updateDateFilters = () => {
+  // Crear una fecha con el mes y año seleccionados
+  const startDate = new Date(selectedYear.value, selectedMonth.value, 1);
+  const endDate = new Date(selectedYear.value, selectedMonth.value + 1, 0); // Último día del mes
+  
+  // Formatear fechas para Grafana (formato Unix timestamp en milisegundos)
+  const fromTime = startDate.getTime();
+  const toTime = endDate.getTime();
+  
+  // Actualizar el timeRange con un rango personalizado
+  const customTimeRange = `${fromTime}/${toTime}`;
+  selectedTimeRange.value = customTimeRange;
+  
+  // Aplicar el filtro
+  dashboardStore.updateTimeRange(customTimeRange);
+  emit('update:timeRange', customTimeRange);
+  
+  console.log(`Filtro aplicado: ${months[selectedMonth.value]} ${selectedYear.value}`);
+};
+
 const applyFilters = () => {
   // Aplicar todos los filtros seleccionados
   dashboardStore.updateTimeRange(selectedTimeRange.value);
-
-  // Aquí podrías implementar la lógica para filtrar por tipo de actividad y estado de tareas
+  
   console.log('Aplicando filtros:', {
     timeRange: selectedTimeRange.value,
-    activities: activityFilters.value,
-    tasks: taskFilters.value
+    plans: planFilters.value,
+    status: statusFilters.value
   });
-
+  
   // Recargar datos con los filtros aplicados
   dashboardStore.fetchDashboardData();
   emit('applyFilters', {
     timeRange: selectedTimeRange.value,
-    activities: activityFilters.value,
-    tasks: taskFilters.value
+    plans: planFilters.value,
+    status: statusFilters.value
   });
 };
 
 const resetFilters = () => {
   // Restablecer todos los filtros a sus valores predeterminados
   selectedTimeRange.value = 'now-6h';
-
-  activityFilters.value = {
-    videoconference: true,
-    meetings: true,
-    tasks: true
+  
+  // Restablecer filtros de mes y año al mes y año actual
+  selectedMonth.value = currentDate.getMonth();
+  selectedYear.value = currentDate.getFullYear();
+  
+  planFilters.value = {
+    strategic: true,
+    operational: true,
+    project: true
   };
-
-  taskFilters.value = {
+  
+  statusFilters.value = {
     completed: true,
     inProgress: true,
     pending: true
   };
-
+  
   // Recargar datos con los filtros restablecidos
   dashboardStore.updateTimeRange(selectedTimeRange.value);
   dashboardStore.fetchDashboardData();
   emit('resetFilters');
 };
+
+onMounted(() => {
+  console.log('Planes montado');
+  console.log('Token API:', apiToken.value ? apiToken.value.substring(0, 5) + '...' : 'No disponible');
+  
+  // Verificar que el dashboard existe en Grafana
+  if (apiToken.value) {
+    fetch(`/grafana/api/dashboards/uid/${dashboardStore.state.grafana.dashboardId}`, {
+      headers: {
+        'Authorization': `Token ${apiToken.value}`
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        console.error('Error al verificar dashboard:', response.status);
+        if (response.status === 404) {
+          console.error('Dashboard no encontrado. Verifica el ID del dashboard.');
+        }
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Dashboard info:', data);
+    })
+    .catch(err => {
+      console.error('Error al verificar dashboard:', err);
+    });
+  }
+  
+  // Inicializar datos del dashboard si es necesario
+  if (!dashboardStore.state.initialized) {
+    dashboardStore.fetchDashboardData();
+  }
+});
 </script>
 
 <style scoped>

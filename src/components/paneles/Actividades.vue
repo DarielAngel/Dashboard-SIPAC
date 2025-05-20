@@ -30,7 +30,9 @@
               :baseUrl="dashboardStore.state.grafana.baseUrl" 
               :dashboardId="dashboardStore.state.grafana.dashboardId" 
               :panelId="dashboardStore.state.grafana.panels[0].id"
-              :initialTimeRange="dashboardStore.state.grafana.timeRange"
+              :initialTimeRange="selectedTimeRange"
+              :authToken="apiToken"
+              :apiParams="getApiParams()"
               @update="handleTimeRangeUpdate"
             />
           </div>
@@ -40,15 +42,60 @@
             <div class="filter-card">
               <h3>Filtros</h3>
               
+              <!-- Filtro de rango de fechas con calendarios -->
               <div class="filter-section">
-                <label>Período de tiempo</label>
+                <label>Rango de fechas</label>
+                <div class="date-range-picker">
+                  <div class="date-picker">
+                    <label>Desde:</label>
+                    <input 
+                      type="date" 
+                      v-model="startDate" 
+                      @change="updateCustomDateRange"
+                      :max="endDate || undefined"
+                    />
+                  </div>
+                  <div class="date-picker">
+                    <label>Hasta:</label>
+                    <input 
+                      type="date" 
+                      v-model="endDate" 
+                      @change="updateCustomDateRange"
+                      :min="startDate || undefined"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div class="filter-section">
+                <label>Período predefinido</label>
                 <select v-model="selectedTimeRange" @change="applyTimeRangeFilter">
+                  <option value="custom">Personalizado</option>
                   <option value="now-1h">Última hora</option>
                   <option value="now-6h">Últimas 6 horas</option>
                   <option value="now-12h">Últimas 12 horas</option>
                   <option value="now-24h">Últimas 24 horas</option>
                   <option value="now-7d">Última semana</option>
                   <option value="now-30d">Último mes</option>
+                </select>
+              </div>
+              
+              <!-- Filtros para mes y año -->
+              <div class="filter-section">
+                <label>Mes</label>
+                <select v-model="selectedMonth" @change="updateDateFilters">
+                  <option v-for="(month, index) in months" :key="index" :value="index">
+                    {{ month }}
+                  </option>
+                </select>
+              </div>
+              
+              <div class="filter-section">
+                <label>Año</label>
+                <select v-model="selectedYear" @change="updateDateFilters">
+                  <option v-for="year in years" :key="year" :value="year">
+                    {{ year }}
+                  </option>
                 </select>
               </div>
               
@@ -105,7 +152,7 @@
   </template>
   
   <script setup>
-  import { ref, computed } from 'vue';
+  import { ref, computed, onMounted, watch } from 'vue';
   import authService from '../../services/auth.service';
   import dashboardStore from '../../store/dashboard.store';
   import { formatNumber } from '../../utils/dashboard.utils';
@@ -142,48 +189,176 @@
     pending: true
   });
   
-  // Actividades recientes computadas
-  const recentActivities = computed(() => {
-    // Aquí podrías filtrar las actividades según los filtros seleccionados
-    return dashboardStore.state.activities.slice(0, 5); // Mostrar solo las 5 primeras
+  // Variables para filtros de mes y año
+  const currentDate = new Date();
+  const selectedMonth = ref(currentDate.getMonth());
+  const selectedYear = ref(currentDate.getFullYear());
+  
+  // Variables para el rango de fechas personalizado
+  const startDate = ref('');
+  const endDate = ref('');
+  
+  // Formatear fecha actual para los inputs de tipo date
+  const formatDateForInput = (date) => {
+    return date.toISOString().split('T')[0];
+  };
+  
+  // Inicializar fechas con valores por defecto (últimos 7 días)
+  const initializeDateRange = () => {
+    const today = new Date();
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(today.getDate() - 7);
+    
+    startDate.value = formatDateForInput(sevenDaysAgo);
+    endDate.value = formatDateForInput(today);
+  };
+  
+  // Array de meses para el selector
+  const months = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
+  
+  // Generar array de años (desde 5 años atrás hasta el actual)
+  const years = Array.from(
+    { length: 6 }, 
+    (_, i) => currentDate.getFullYear() - 5 + i
+  );
+  
+  // Obtener token de autenticación del usuario actual
+  const apiToken = computed(() => {
+    return authService.getToken();
   });
   
-  // Función para obtener color según tipo de actividad
-  const getActivityColor = (activity) => {
-    // Asignar colores según el tipo o valor de la actividad
-    if (activity.value > 70) return '#4CAF50'; // Verde para valores altos
-    if (activity.value > 40) return '#FFC107'; // Amarillo para valores medios
-    return '#F44336'; // Rojo para valores bajos
+  // Función para actualizar el rango de fechas personalizado
+  const updateCustomDateRange = () => {
+    if (startDate.value && endDate.value) {
+      // Convertir las fechas a timestamps para Grafana
+      const fromTime = new Date(startDate.value).getTime();
+      const toTime = new Date(endDate.value + 'T23:59:59').getTime(); // Incluir todo el día final
+      
+      // Actualizar el timeRange con un rango personalizado
+      const customTimeRange = `${fromTime}/${toTime}`;
+      selectedTimeRange.value = 'custom';
+      
+      // Aplicar el filtro
+      dashboardStore.updateTimeRange(customTimeRange);
+      emit('update:timeRange', customTimeRange);
+      
+      console.log(`Filtro de fechas aplicado: ${startDate.value} a ${endDate.value}`);
+    }
   };
+  
+  // Función para obtener parámetros para la API
+  const getApiParams = () => {
+  // Parámetros base
+  const params = {
+    format: 'json'
+  };
+  
+  // Añadir parámetros de año y mes
+  params.anno = selectedYear.value;
+  params.mes = selectedMonth.value + 1;
+  
+  // Añadir parámetros de fecha si se ha seleccionado un rango personalizado
+  if (selectedTimeRange.value === 'custom' && startDate.value && endDate.value) {
+    params.finicio = startDate.value;
+    params.ffin = endDate.value;
+  }
+  
+  // Añadir filtros de tipo de actividad usando valores numéricos
+  // Asumiendo que los tipos de actividad tienen IDs numéricos en la base de datos
+  if (activityFilters.value.videoconference && !activityFilters.value.meetings && !activityFilters.value.tasks) {
+    params.tipoactividad = 1; // ID para videoconferencia
+  } else if (!activityFilters.value.videoconference && activityFilters.value.meetings && !activityFilters.value.tasks) {
+    params.tipoactividad = 2; // ID para reuniones
+  } else if (!activityFilters.value.videoconference && !activityFilters.value.meetings && activityFilters.value.tasks) {
+    params.tipoactividad = 3; // ID para tareas
+  }
+  
+  // Añadir filtros de estado de tareas
+  if (taskFilters.value.completed && !taskFilters.value.inProgress && !taskFilters.value.pending) {
+    params.status = 'Completado';
+  } else if (!taskFilters.value.completed && taskFilters.value.inProgress && !taskFilters.value.pending) {
+    params.status = 'Pendiente';
+  } else if (!taskFilters.value.completed && !taskFilters.value.inProgress && taskFilters.value.pending) {
+    params.status = 'Pendiente';
+  }
+  
+  // Si el usuario actual tiene un ID, añadirlo como filtro
+  if (currentUser.value && currentUser.value.id) {
+    params.id_user = currentUser.value.id;
+  }
+  
+  console.log('Parámetros enviados a la API:', params);
+  return params;
+};
   
   // Funciones para manejar cambios en los componentes
   const handleTimeRangeUpdate = (newTimeRange) => {
-    selectedTimeRange.value = newTimeRange;
+    // Si el nuevo rango no es personalizado, actualizar selectedTimeRange
+    if (newTimeRange !== 'custom') {
+      selectedTimeRange.value = newTimeRange;
+      
+      // Limpiar fechas personalizadas si se selecciona un rango predefinido
+      if (newTimeRange !== 'custom') {
+        startDate.value = '';
+        endDate.value = '';
+      }
+    }
+    
     dashboardStore.updateTimeRange(newTimeRange);
     emit('update:timeRange', newTimeRange);
   };
   
-  const handleActivityPeriodChange = (period) => {
-    dashboardStore.fetchActivities(period);
-  };
-  
-  const handleTaskPeriodChange = (period) => {
-    dashboardStore.fetchTasks(period);
-  };
-  
   // Funciones para los filtros
   const applyTimeRangeFilter = () => {
-    dashboardStore.updateTimeRange(selectedTimeRange.value);
-    emit('update:timeRange', selectedTimeRange.value);
+    // Si se selecciona un rango predefinido, limpiar fechas personalizadas
+    if (selectedTimeRange.value !== 'custom') {
+      startDate.value = '';
+      endDate.value = '';
+      dashboardStore.updateTimeRange(selectedTimeRange.value);
+      emit('update:timeRange', selectedTimeRange.value);
+    } else {
+      // Si se selecciona "Personalizado", asegurarse de que hay fechas seleccionadas
+      if (startDate.value && endDate.value) {
+        updateCustomDateRange();
+      } else {
+        // Si no hay fechas seleccionadas, inicializar con valores por defecto
+        initializeDateRange();
+        updateCustomDateRange();
+      }
+    }
+  };
+  
+  // Función para manejar cambios en los filtros de fecha
+  const updateDateFilters = () => {
+    // Crear una fecha con el mes y año seleccionados
+    const startOfMonth = new Date(selectedYear.value, selectedMonth.value, 1);
+    const endOfMonth = new Date(selectedYear.value, selectedMonth.value + 1, 0); // Último día del mes
+    
+    // Actualizar los inputs de fecha
+    startDate.value = formatDateForInput(startOfMonth);
+    endDate.value = formatDateForInput(endOfMonth);
+    
+    // Actualizar el rango personalizado
+    updateCustomDateRange();
+    
+    console.log(`Filtro aplicado: ${months[selectedMonth.value]} ${selectedYear.value}`);
   };
   
   const applyFilters = () => {
     // Aplicar todos los filtros seleccionados
-    dashboardStore.updateTimeRange(selectedTimeRange.value);
+    if (selectedTimeRange.value === 'custom') {
+      updateCustomDateRange();
+    } else {
+      dashboardStore.updateTimeRange(selectedTimeRange.value);
+    }
     
-    // Aquí podrías implementar la lógica para filtrar por tipo de actividad y estado de tareas
     console.log('Aplicando filtros:', {
       timeRange: selectedTimeRange.value,
+      startDate: startDate.value,
+      endDate: endDate.value,
       activities: activityFilters.value,
       tasks: taskFilters.value
     });
@@ -192,6 +367,8 @@
     dashboardStore.fetchDashboardData();
     emit('applyFilters', {
       timeRange: selectedTimeRange.value,
+      startDate: startDate.value,
+      endDate: endDate.value,
       activities: activityFilters.value,
       tasks: taskFilters.value
     });
@@ -200,6 +377,14 @@
   const resetFilters = () => {
     // Restablecer todos los filtros a sus valores predeterminados
     selectedTimeRange.value = 'now-6h';
+    
+    // Limpiar fechas personalizadas
+    startDate.value = '';
+    endDate.value = '';
+    
+    // Restablecer filtros de mes y año al mes y año actual
+    selectedMonth.value = currentDate.getMonth();
+    selectedYear.value = currentDate.getFullYear();
     
     activityFilters.value = {
       videoconference: true,
@@ -218,6 +403,52 @@
     dashboardStore.fetchDashboardData();
     emit('resetFilters');
   };
+  
+  // Observar cambios en selectedTimeRange
+  watch(selectedTimeRange, (newValue) => {
+    if (newValue !== 'custom') {
+      // Limpiar fechas personalizadas si se selecciona un rango predefinido
+      startDate.value = '';
+      endDate.value = '';
+    }
+  });
+  
+  onMounted(() => {
+    console.log('Actividades montado');
+    console.log('Token API:', apiToken.value ? apiToken.value.substring(0, 5) + '...' : 'No disponible');
+    
+    // Inicializar el rango de fechas
+    initializeDateRange();
+    
+    // Verificar que el dashboard existe en Grafana
+    if (apiToken.value) {
+      fetch(`/grafana/api/dashboards/uid/${dashboardStore.state.grafana.dashboardId}`, {
+        headers: {
+          'Authorization': `Token ${apiToken.value}`
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          console.error('Error al verificar dashboard:', response.status);
+          if (response.status === 404) {
+            console.error('Dashboard no encontrado. Verifica el ID del dashboard.');
+          }
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Dashboard info:', data);
+      })
+      .catch(err => {
+        console.error('Error al verificar dashboard:', err);
+      });
+    }
+    
+    // Inicializar datos del dashboard si es necesario
+    if (!dashboardStore.state.initialized) {
+      dashboardStore.fetchDashboardData();
+    }
+  });
   </script>
   
   <style scoped>

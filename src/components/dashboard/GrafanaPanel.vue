@@ -157,7 +157,7 @@ const handleIframeLoad = () => {
   console.log('Panel cargado correctamente');
 };
 
-// En el método handleIframeError, mejora el manejo de errores
+// En el método handleIframeError, cambia Bearer por Token
 const handleIframeError = (e) => {
   loading.value = false;
   error.value = 'Error al cargar el panel. Verifique la conexión a Grafana y que el dashboard exista.';
@@ -167,7 +167,7 @@ const handleIframeError = (e) => {
   // Intentar verificar si el dashboard existe
   fetch(`/grafana/api/dashboards/uid/${props.dashboardId}`, {
     headers: {
-      'Authorization': `Bearer ${props.authToken}`
+      'Authorization': `Token ${props.authToken}`
     }
   })
   .then(response => {
@@ -186,7 +186,7 @@ const handleIframeError = (e) => {
   });
 };
 
-// En el método onMounted, añade verificación del dashboard
+// En el método onMounted, cambia Bearer por Token
 onMounted(() => {
   console.log('GrafanaPanel montado');
   console.log('Dashboard ID:', props.dashboardId);
@@ -206,7 +206,7 @@ onMounted(() => {
       // Verificar que el dashboard existe
       return fetch(`/grafana/api/dashboards/uid/${props.dashboardId}`, {
         headers: {
-          'Authorization': `Bearer ${props.authToken}`
+          'Authorization': `Token ${props.authToken}`
         }
       });
     })
@@ -332,6 +332,53 @@ onUnmounted(() => {
     clearInterval(refreshInterval.value);
   }
 });
+
+// Observar cambios en los parámetros de la API
+watch(
+  () => props.apiParams,
+  (newParams) => {
+    console.log('Nuevos parámetros recibidos en GrafanaPanel:', newParams);
+    // Recargar el panel con los nuevos parámetros
+    updatePanel();
+  },
+  { deep: true }
+);
+
+// En el componente GrafanaPanel, busca la función que construye la URL
+// y modifícala para que incluya los parámetros como variables de Grafana
+
+const buildPanelUrl = () => {
+  const baseUrl = '/grafana'; // o la URL base que estés usando
+  const dashboardId = props.dashboardId;
+  const panelId = props.panelId;
+  
+  // Construir la URL base - añadir kiosk=false para mostrar los controles
+  let url = `${baseUrl}/d-solo/${dashboardId}?panelId=${panelId}&refresh=10s&orgId=1&kiosk=false`;
+  
+  // Añadir rango de tiempo
+  if (props.initialTimeRange) {
+    if (props.initialTimeRange.includes('/')) {
+      // Es un rango personalizado (timestamp/timestamp)
+      const [from, to] = props.initialTimeRange.split('/');
+      url += `&from=${from}&to=${to}`;
+    } else {
+      // Es un rango relativo (now-6h, etc.)
+      url += `&from=${props.initialTimeRange}&to=now`;
+    }
+  }
+  
+  // Añadir parámetros de API como variables de Grafana
+  if (props.apiParams) {
+    Object.entries(props.apiParams).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        // Usar el prefijo var- para las variables de Grafana
+        url += `&var-${key}=${encodeURIComponent(value)}`;
+      }
+    });
+  }
+  
+  return url;
+};
 </script>
 
 <style scoped>

@@ -25,6 +25,12 @@ const state = reactive({
     activities: false,
     tasks: false,
     stats: false
+  },
+  // Añadir un objeto para almacenar los parámetros de la API
+  apiParams: {
+    anno: new Date().getFullYear(),
+    mes: new Date().getMonth() + 1,
+    format: 'json'
   }
 });
 
@@ -33,6 +39,13 @@ const actions = {
   // Update Grafana time range
   updateTimeRange(timeRange) {
     state.grafana.timeRange = timeRange;
+  },
+  
+  // Método para actualizar los parámetros de la API
+  updateApiParams(params) {
+    // Actualizar los parámetros de la API
+    state.apiParams = { ...state.apiParams, ...params };
+    console.log('API params updated:', state.apiParams);
   },
   
   // Fetch activities data
