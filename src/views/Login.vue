@@ -2,7 +2,7 @@
   <div class="login-container">
     <div class="navbar">
       <div class="brand">
-        <span>Argon Dashboard 2</span>
+        <span>SIPAC Dashboard</span>
       </div>
       
       <div class="nav-links">
@@ -10,26 +10,26 @@
           <i class="fas fa-tachometer-alt"></i> Dashboard
         </router-link>
         <router-link to="/profile" class="nav-link">
-          <i class="fas fa-user"></i> Profile
+          <i class="fas fa-user"></i> Perfil
         </router-link>
         <router-link to="/register" class="nav-link">
-          <i class="fas fa-user-plus"></i> Sign Up
+          <i class="fas fa-user-plus"></i> Registrarse
         </router-link>
         <router-link to="/login" class="nav-link active">
-          <i class="fas fa-sign-in-alt"></i> Sign In
+          <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
         </router-link>
-      </div>
-      
-      <div class="download-btn">
-        <button class="btn-download">Free download</button>
       </div>
     </div>
     
     <div class="content">
       <div class="login-section">
         <div class="login-form-wrapper">
-          <h2 class="login-title">Sign In</h2>
-          <p class="login-subtitle">Enter your username and password to sign in</p>
+          <!-- Remove the logo container that's causing the error -->
+          <!-- <div class="logo-container">
+            <img src="@/assets/img/sipac-logo.png" alt="SIPAC Logo" class="sipac-logo" />
+          </div> -->
+          <h2 class="login-title">Iniciar Sesión</h2>
+          <p class="login-subtitle">Introduzca sus credenciales para acceder</p>
           
           <div v-if="error" class="error-message">
             {{ error }}
@@ -42,7 +42,7 @@
                 id="username" 
                 v-model="username" 
                 class="form-control" 
-                placeholder="Username" 
+                placeholder="Usuario" 
                 required
               />
             </div>
@@ -53,32 +53,31 @@
                 id="password" 
                 v-model="password" 
                 class="form-control" 
-                placeholder="Password" 
+                placeholder="Contraseña" 
                 required
               />
             </div>
             
             <div class="form-check">
               <input type="checkbox" id="remember" v-model="rememberMe" class="form-check-input" />
-              <label for="remember" class="form-check-label">Remember me</label>
+              <label for="remember" class="form-check-label">Recuérdame</label>
             </div>
             
             <button type="submit" class="btn-signin" :disabled="loading">
-              {{ loading ? 'Iniciando sesión...' : 'Sign In' }}
+              {{ loading ? 'Iniciando sesión...' : 'Autenticar' }}
             </button>
           </form>
           
           <p class="signup-text">
-            Don't have an account? <router-link to="/register" class="signup-link">Sign up</router-link>
+            ¿No tiene una cuenta? <router-link to="/register" class="signup-link">Registrar</router-link>
           </p>
         </div>
       </div>
-      
-      <div class="quote-section">
-        <div class="quote-content">
-          <h3 class="quote-title">"Attention is the new currency"</h3>
-          <p class="quote-text">The more effortless the writing looks, the more effort the writer actually put into the process.</p>
-        </div>
+    </div>
+    
+    <div class="footer">
+      <div class="sipac-branding">
+        <span>Sistema de Planificación de Actividades</span>
       </div>
     </div>
   </div>
@@ -146,8 +145,12 @@ const handleLogin = async () => {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #f8f9fa;
+  background-image: url('@/assets/img/xedro.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   font-family: 'Open Sans', sans-serif;
+  position: relative;
 }
 
 .navbar {
@@ -155,14 +158,15 @@ const handleLogin = async () => {
   justify-content: space-between;
   align-items: center;
   padding: 15px 30px;
-  background-color: white;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(5px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .brand {
   font-weight: 700;
-  font-size: 1.1rem;
-  color: #344767;
+  font-size: 1.2rem;
+  color: #5e2c8a;
 }
 
 .nav-links {
@@ -175,57 +179,60 @@ const handleLogin = async () => {
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 500;
-  transition: color 0.2s;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   gap: 6px;
+  padding: 5px 10px;
+  border-radius: 5px;
 }
 
 .nav-link.active, .nav-link:hover {
-  color: #344767;
+  color: #5e2c8a;
+  background-color: rgba(94, 44, 138, 0.1);
   font-weight: 600;
-}
-
-.btn-download {
-  background-color: #35d1a0;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-download:hover {
-  background-color: #2bb389;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(53, 209, 160, 0.3);
 }
 
 .content {
   display: flex;
   flex: 1;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
 }
 
 .login-section {
-  flex: 1;
+  width: 100%;
+  max-width: 450px;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 40px;
 }
 
 .login-form-wrapper {
   width: 100%;
-  max-width: 400px;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+
+.logo-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.sipac-logo {
+  height: 60px;
+  margin-bottom: 10px;
 }
 
 .login-title {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #344767;
+  color: #5e2c8a;
   margin-bottom: 10px;
 }
 
@@ -245,30 +252,34 @@ const handleLogin = async () => {
 
 .form-control {
   width: 100%;
-  padding: 12px 16px;
+  padding: 14px 16px;
   border: 1px solid #d2d6da;
-  border-radius: 8px;
-  font-size: 0.9rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
   transition: all 0.2s;
+  background-color: rgba(255, 255, 255, 0.8);
 }
 
 .form-control:focus {
-  border-color: #35d1a0;
+  border-color: #5e2c8a;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(53, 209, 160, 0.15);
+  box-shadow: 0 0 0 3px rgba(94, 44, 138, 0.15);
+  background-color: white;
 }
 
 .form-check {
   display: flex;
   align-items: center;
   margin-bottom: 25px;
+  justify-content: flex-start;
 }
 
 .form-check-input {
   margin-right: 10px;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   cursor: pointer;
+  accent-color: #5e2c8a;
 }
 
 .form-check-label {
@@ -278,81 +289,74 @@ const handleLogin = async () => {
 }
 
 .btn-signin {
-  background-color: #35d1a0;
+  background-color: #5e2c8a;
   color: white;
   border: none;
   width: 100%;
-  padding: 12px;
-  border-radius: 8px;
+  padding: 14px;
+  border-radius: 10px;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .btn-signin:hover {
-  background-color: #2bb389;
+  background-color: #4a2370;
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(53, 209, 160, 0.3);
+  box-shadow: 0 5px 15px rgba(94, 44, 138, 0.3);
+}
+
+.btn-signin:disabled {
+  background-color: #a78bc7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .signup-text {
   margin-top: 25px;
   color: #67748e;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   text-align: center;
 }
 
 .signup-link {
-  color: #35d1a0;
+  color: #5e2c8a;
   font-weight: 600;
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .signup-link:hover {
-  color: #2bb389;
+  color: #4a2370;
   text-decoration: underline;
 }
 
-.quote-section {
-  flex: 1;
-  background-color: #35d1a0;
+.footer {
+  padding: 15px 30px;
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sipac-branding {
   display: flex;
   align-items: center;
-  justify-content: center;
-  position: relative;
+  gap: 10px;
+  color: #5e2c8a;
+  font-weight: 600;
 }
 
-.quote-content {
-  color: white;
-  text-align: center;
-  max-width: 80%;
-  padding: 2rem;
-}
-
-.quote-title {
-  font-size: 2.2rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  line-height: 1.3;
-}
-
-.quote-text {
-  font-size: 1.1rem;
-  line-height: 1.6;
-  opacity: 0.9;
+.footer-logo {
+  height: 30px;
 }
 
 @media (max-width: 992px) {
-  .content {
-    flex-direction: column;
-  }
-  
-  .quote-section {
-    display: none;
-  }
-  
   .navbar {
     flex-direction: column;
     gap: 15px;
@@ -365,7 +369,11 @@ const handleLogin = async () => {
   }
   
   .login-section {
-    padding: 20px;
+    padding: 10px;
+  }
+  
+  .login-form-wrapper {
+    padding: 30px 20px;
   }
 }
 </style>

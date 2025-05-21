@@ -25,6 +25,7 @@
           :authToken="apiToken" 
           :apiParams="getApiParams()"
           @update="handleTimeRangeUpdate" 
+          class="grafana-panel-height"
         />
       </div>
 
@@ -484,6 +485,11 @@ onMounted(() => {
   flex: 2;
   min-width: 0;
   /* Evita que el panel se desborde */
+}
+
+/* Aumentar la altura del panel de Grafana */
+.grafana-panel-height {
+  min-height: 500px; /* Aumentar la altura del panel */
 }
 
 .filter-panel {

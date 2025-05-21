@@ -77,21 +77,98 @@ const accountItems = ref([
 
 <style scoped>
 .sidebar {
+  background-color: #2a1b3d;
+  color: #fff;
   width: 250px;
   height: 100vh;
   position: fixed;
-  top: 0;
   left: 0;
-  transition: all 0.3s;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  top: 0;
+  z-index: 100;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
 
-.sidebar.collapsed {
-  width: 80px;
+.sidebar-header {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
+
+.sidebar-logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  text-align: center;
+}
+
+.sidebar-menu {
+  padding: 20px 0;
+}
+
+.menu-item {
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  transition: all 0.3s;
+  border-left: 3px solid transparent;
+}
+
+.menu-item:hover, .menu-item.active {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-left: 3px solid #5e2c8a;
+}
+
+.menu-item i {
+  margin-right: 10px;
+  font-size: 1.1rem;
+}
+
+.menu-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Estilos para submenús si los tienes */
+.submenu {
+  padding-left: 15px;
+}
+
+/* Estilos para el botón de colapsar sidebar si lo tienes */
+.collapse-btn {
+  position: absolute;
+  right: -12px;
+  top: 20px;
+  background: #5e2c8a;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilos para el footer del sidebar */
+.sidebar-footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding: 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+</style>
 
 @media (max-width: 768px) {
   .sidebar {
@@ -107,4 +184,3 @@ const accountItems = ref([
     transform: translateX(-100%);
   }
 }
-</style>

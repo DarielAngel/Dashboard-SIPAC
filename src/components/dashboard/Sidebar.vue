@@ -11,25 +11,29 @@
       <div class="menu-item" 
            :class="{ active: activeItem === 'dashboard' }"
            @click="changeSection('dashboard')">
-        Dashboard
+        <i class="fas fa-tachometer-alt"></i>
+        <span class="menu-text">Dashboard</span>
       </div>
       
       <div class="menu-item" 
            :class="{ active: activeItem === 'tables' }"
            @click="changeSection('tables')">
-        Tables
+        <i class="fas fa-table"></i>
+        <span class="menu-text">Tables</span>
       </div>
 
       <div class="menu-item" 
            :class="{ active: activeItem === 'planes' }"
            @click="changeSection('planes')">
-        Planes
+        <i class="fas fa-project-diagram"></i>
+        <span class="menu-text">Planes</span>
       </div>
 
       <div class="menu-item" 
            :class="{ active: activeItem === 'pruebas' }"
            @click="changeSection('pruebas')">
-        Prueba
+        <i class="fas fa-vial"></i>
+        <span class="menu-text">Prueba</span>
       </div>
       
       <div class="menu-item" 
@@ -55,19 +59,18 @@
       <div class="menu-item" 
            :class="{ active: activeItem === 'profile' }"
            @click="changeSection('profile')">
-        Profile
+        <i class="fas fa-user"></i>
+        <span class="menu-text">Profile</span>
       </div>
       
-      <!-- <router-link to="/profile" class="menu-item" :class="{ active: activeItem === 'profile' }">
-        Profile
-      </router-link> -->
-      
       <router-link to="/login" class="menu-item" :class="{ active: activeItem === 'signin' }">
-        Sign In
+        <i class="fas fa-sign-in-alt"></i>
+        <span class="menu-text">Sign In</span>
       </router-link>
       
       <router-link to="/register" class="menu-item" :class="{ active: activeItem === 'signup' }">
-        Sign Up
+        <i class="fas fa-user-plus"></i>
+        <span class="menu-text">Sign Up</span>
       </router-link>
     </div>
     
@@ -128,15 +131,19 @@ onMounted(() => {
 .sidebar {
   width: 250px;
   height: 100vh;
-  background-color: white;
-  border-right: 1px solid #eee;
+  background-color: #2a1b3d;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100;
 }
 
 .sidebar-header {
   padding: 20px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .logo {
@@ -147,7 +154,7 @@ onMounted(() => {
 .logo-icon {
   width: 36px;
   height: 36px;
-  background-color: #4CAF50;
+  background-color: #5e2c8a;
   color: white;
   border-radius: 8px;
   display: flex;
@@ -161,7 +168,7 @@ onMounted(() => {
   margin-left: 10px;
   font-weight: 600;
   font-size: 1rem;
-  color: #344767;
+  color: white;
 }
 
 .sidebar-menu {
@@ -171,42 +178,57 @@ onMounted(() => {
 }
 
 .menu-item {
-  display: block;
+  display: flex;
+  align-items: center;
   padding: 12px 20px;
-  color: #67748e;
+  color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
   font-size: 0.875rem;
-  transition: all 0.2s ease;
-  border-radius: 0;
+  transition: all 0.3s ease;
+  border-left: 3px solid transparent;
+  cursor: pointer;
 }
 
 .menu-item:hover {
-  background-color: #f8f9fa;
-  color: #344767;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-left: 3px solid #5e2c8a;
 }
 
 .menu-item.active {
-  background-color: #f8f9fa;
-  color: #344767;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
   font-weight: 600;
+  border-left: 3px solid #5e2c8a;
+}
+
+.menu-item i {
+  margin-right: 10px;
+  font-size: 1rem;
+  width: 20px;
+  text-align: center;
+}
+
+.menu-text {
+  font-weight: 500;
 }
 
 .section-title {
   padding: 20px 20px 10px;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #a3a3a3;
+  color: rgba(255, 255, 255, 0.5);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .sidebar-footer {
   padding: 20px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .help-section {
-  background-color: #f8f9fa;
+  background-color: rgba(255, 255, 255, 0.1);
   padding: 15px;
   border-radius: 8px;
   text-align: center;
@@ -215,23 +237,26 @@ onMounted(() => {
 .help-title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #344767;
+  color: white;
   margin-bottom: 10px;
 }
 
 .support-btn {
   background-color: transparent;
-  color: #4CAF50;
-  border: 1px solid #4CAF50;
-  border-radius: 4px;
+  color: white;
+  border: 1px solid #5e2c8a;
+  border-radius: 8px;
   padding: 8px 16px;
   font-size: 0.75rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  background-color: #5e2c8a;
+  font-weight: 600;
 }
 
 .support-btn:hover {
-  background-color: #4CAF50;
-  color: white;
+  background-color: #4a2370;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(94, 44, 138, 0.3);
 }
 </style>

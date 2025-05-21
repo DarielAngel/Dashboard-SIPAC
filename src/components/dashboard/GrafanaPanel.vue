@@ -344,8 +344,8 @@ watch(
   { deep: true }
 );
 
-// En el componente GrafanaPanel, busca la función que construye la URL
-// y modifícala para que incluya los parámetros como variables de Grafana
+// Busca la función que construye la URL del iframe y asegúrate de que incluya todos los parámetros
+// Ejemplo de cómo podría verse:
 
 const buildPanelUrl = () => {
   const baseUrl = '/grafana'; // o la URL base que estés usando
