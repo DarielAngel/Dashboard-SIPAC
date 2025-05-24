@@ -5,7 +5,7 @@
         <h3>{{ title }}</h3>
         <p class="panel-subtitle">{{ subtitle }}</p>
       </div>
-      <div class="panel-controls">
+      <!-- <div class="panel-controls">
         <select v-model="localTimeRange" @change="updatePanel">
           <option value="now-1h">Última hora</option>
           <option value="now-6h">Últimas 6 horas</option>
@@ -16,7 +16,7 @@
         <button @click="refreshPanel" class="refresh-btn" title="Refrescar panel">
           <i class="fas fa-sync-alt"></i>
         </button>
-      </div>
+      </div> -->
     </div>
     <div class="panel-container">
       <div v-if="loading" class="loading-overlay">
@@ -32,7 +32,7 @@
         :key="localTimestamp" 
         :src="panelUrl" 
         width="100%" 
-        height="300" 
+        height=400 
         frameborder="0"
         ref="panelFrame"
         @load="handleIframeLoad"

@@ -15,12 +15,12 @@
         <span class="menu-text">Dashboard</span>
       </div>
       
-      <div class="menu-item" 
+      <!-- <div class="menu-item" 
            :class="{ active: activeItem === 'tables' }"
            @click="changeSection('tables')">
         <i class="fas fa-table"></i>
         <span class="menu-text">Tables</span>
-      </div>
+      </div> -->
 
       <div class="menu-item" 
            :class="{ active: activeItem === 'planes' }"
@@ -29,7 +29,7 @@
         <span class="menu-text">Planes</span>
       </div>
 
-      <div class="menu-item" 
+      <!-- <div class="menu-item" 
            :class="{ active: activeItem === 'pruebas' }"
            @click="changeSection('pruebas')">
         <i class="fas fa-vial"></i>
@@ -52,7 +52,7 @@
            :class="{ active: activeItem === 'rtl' }"
            @click="changeSection('rtl')">
         RTL
-      </div>
+      </div> -->
       
       <div class="section-title">ACCOUNT PAGES</div>
 

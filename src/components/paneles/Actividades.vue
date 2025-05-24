@@ -4,11 +4,11 @@
 
     <div class="stats-cards">
       <StatCard 
-        title="TODAY'S MONEY" 
-        value="$52,552" 
-        change="+15%" 
-        period="since yesterday" 
-        icon="fas fa-dollar-sign" 
+        title="Actividades en el mes" 
+        value="5" 
+        change="" 
+        period="" 
+        icon="" 
         color="blue"
       />
     </div>
@@ -101,7 +101,7 @@
           </div>
 
           <!-- Filtros de estado de tareas -->
-          <div class="filter-section">
+          <!-- <div class="filter-section">
             <label>Estado de tareas</label>
             <div class="checkbox-group">
               <div class="checkbox-item">
@@ -121,7 +121,7 @@
                 <label for="task-status-4">Pospuestas</label>
               </div>
             </div>
-          </div>
+          </div> -->
 
           <!-- Botones de acción -->
           <div class="filter-actions">
@@ -326,6 +326,8 @@ const getApiParams = () => {
 
 // Función para aplicar los filtros
 const applyFilters = () => {
+  debugger
+
   // Aplicar todos los filtros seleccionados
   if (selectedTimeRange.value.includes('/')) {
     // Es un rango personalizado, mantenerlo
@@ -444,7 +446,7 @@ onMounted(() => {
 
 .stats-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 20px;
   margin-bottom: 20px;
 }
@@ -459,6 +461,7 @@ onMounted(() => {
 .main-panel {
   flex: 2;
   min-width: 0;
+  min-height: 500px;
   /* Evita que el panel se desborde */
 }
 
