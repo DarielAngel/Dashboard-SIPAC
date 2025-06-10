@@ -12,7 +12,7 @@
            :class="{ active: activeItem === 'dashboard' }"
            @click="changeSection('dashboard')">
         <i class="fas fa-tachometer-alt"></i>
-        <span class="menu-text">Dashboard</span>
+        <span class="menu-text">Actividades</span>
       </div>
       
       <!-- <div class="menu-item" 
@@ -23,11 +23,20 @@
       </div> -->
 
       <div class="menu-item" 
+           :class="{ active: activeItem === 'actividades_lugar_estrategia' }"
+           @click="changeSection('actividades_lugar_estrategia')">
+        <i class="fas fa-project-diagram"></i>
+        <span class="menu-text">Actividades por lugares y estrategias</span>
+      </div>
+
+      <div class="menu-item" 
            :class="{ active: activeItem === 'planes' }"
            @click="changeSection('planes')">
         <i class="fas fa-project-diagram"></i>
         <span class="menu-text">Planes</span>
       </div>
+
+
 
       <!-- <div class="menu-item" 
            :class="{ active: activeItem === 'pruebas' }"
@@ -54,7 +63,7 @@
         RTL
       </div> -->
       
-      <div class="section-title">ACCOUNT PAGES</div>
+      <!-- <div class="section-title">ACCOUNT PAGES</div>
 
       <div class="menu-item" 
            :class="{ active: activeItem === 'profile' }"
@@ -71,7 +80,7 @@
       <router-link to="/register" class="menu-item" :class="{ active: activeItem === 'signup' }">
         <i class="fas fa-user-plus"></i>
         <span class="menu-text">Sign Up</span>
-      </router-link>
+      </router-link> -->
     </div>
     
     <div class="sidebar-footer" v-if="showHelp">

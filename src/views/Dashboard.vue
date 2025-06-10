@@ -27,6 +27,11 @@
           @applyFilters="handleApplyFilters" @resetFilters="handleResetFilters" />
       </div>
 
+      <div v-if="currentSection === 'actividades_lugar_estrategia'">
+        <Actividades_lugar_estrategia :currentSection="currentSection" @update:timeRange="handleTimeRangeUpdate"
+          @applyFilters="handleApplyFilters" @resetFilters="handleResetFilters" />
+      </div>
+
 
     </div>
 
@@ -45,6 +50,7 @@ import MainContent from '../components/paneles/MainContent.vue';
 import Actividades from '../components/paneles/Actividades.vue';
 import Planes from '../components/paneles/Planes.vue';
 import Profile from '../views/Profile.vue';
+import Actividades_lugar_estrategia from '../components/paneles/Actividades_lugar_estrategia.vue'
 
 const router = useRouter();
 const route = useRoute();
