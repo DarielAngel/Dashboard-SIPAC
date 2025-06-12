@@ -32,6 +32,16 @@
           @applyFilters="handleApplyFilters" @resetFilters="handleResetFilters" />
       </div>
 
+      <div v-if="currentSection === 'actividades_procesos'">
+        <Actividades_procesos :currentSection="currentSection" @update:timeRange="handleTimeRangeUpdate"
+          @applyFilters="handleApplyFilters" @resetFilters="handleResetFilters" />
+      </div>
+
+      <div v-if="currentSection === 'actividades_objetivos'">
+        <Actividades_objetivos :currentSection="currentSection" @update:timeRange="handleTimeRangeUpdate"
+          @applyFilters="handleApplyFilters" @resetFilters="handleResetFilters" />
+      </div>
+
 
     </div>
 
@@ -45,12 +55,14 @@ import authService from '../services/auth.service';
 import dashboardStore from '../store/dashboard.store';
 
 // Import components
-import Sidebar from '../components/dashboard/sidebar.vue';
+import Sidebar from '../components/dashboard/Sidebar.vue';
 import MainContent from '../components/paneles/MainContent.vue';
 import Actividades from '../components/paneles/Actividades.vue';
 import Planes from '../components/paneles/Planes.vue';
 import Profile from '../views/Profile.vue';
 import Actividades_lugar_estrategia from '../components/paneles/Actividades_lugar_estrategia.vue'
+import Actividades_objetivos from '../components/paneles/Actividades_objetivos.vue'
+import Actividades_procesos from '../components/paneles/Actividades_procesos.vue'
 
 const router = useRouter();
 const route = useRoute();

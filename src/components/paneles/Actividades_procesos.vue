@@ -42,7 +42,7 @@
             title="Actividades cumplidas" 
             subtitle="Actividades cumplidas por año" 
             dashboardId="eelf40rurz9xcf" 
-            panelId="5"
+            panelId="6"
             :initialTimeRange="selectedTimeRange" 
             :authToken="apiToken" 
             :apiParams="getApiParams()"
@@ -75,26 +75,34 @@
             <!-- Removing the predefined period filter section -->
   
             <!-- Filtros para mes y año -->
+            <!-- Filtros para procesos -->
             <div class="filter-section">
-              <label>Lugar</label>
-              <select v-model="selectedPlace" @change="updateDateFilters">
-                <option value="-1">Todos</option>
-                <option v-for="lugar in lugares" :key="lugar.id" :value="lugar.id">
-                  {{ lugar.denominacion }}
-                </option>
-              </select>
-            </div>
-
-            <div class="filter-section">
-              <label>Estrategia</label>
-              <select v-model="selectedStrategy" @change="updateDateFilters">
-                <option value="-1">Todos</option>
-                <option v-for="estrategia in estrategias" :key="estrategia.id" :value="estrategia.id">
-                  {{ estrategia.denominacion }}
-                </option>
-              </select>
+              <label>Procesos estratégicos</label>
+              <div class="multi-select-container">
+                <div class="select-all-option">
+                  <input 
+                    type="checkbox" 
+                    id="select-all-processes" 
+                    :checked="selectedProcesses.length === procesos.length" 
+                    @change="toggleAllProcesses"
+                  >
+                  <label for="select-all-processes">Seleccionar todos</label>
+                </div>
+                <div class="multi-select-options">
+                  <div v-for="proceso in procesos" :key="proceso.id" class="checkbox-item">
+                    <input 
+                      type="checkbox" 
+                      :id="`proceso-${proceso.id}`" 
+                      :value="proceso.id" 
+                      v-model="selectedProcesses"
+                    >
+                    <label :for="`proceso-${proceso.id}`">{{ proceso.denominacion }}</label>
+                  </div>
+                </div>
+              </div>
             </div>
   
+            <!-- Existing year filter -->
             <div class="filter-section">
               <label>Año</label>
               <select v-model="selectedYear" @change="updateDateFilters">
@@ -176,10 +184,9 @@
   });
   
   // Variables para lugares
-  const lugares = ref([]);
-  const estrategias = ref([]);
-  const selectedPlace = ref(-1); // -1 significa "Todos"
-  const selectedStrategy = ref(-1);
+  const procesos = ref([]);
+  const selectedProcesses = ref([]); // Array para almacenar múltiples procesos seleccionados
+  const selectedProcessed = ref(-1); // -1 significa "Todos"
   
   // Variables para rango de fechas personalizado
   const dateRange = ref({
@@ -287,6 +294,17 @@
     emit('update:timeRange', newTimeRange);
   };
   
+  // Función para seleccionar/deseleccionar todos los procesos
+  const toggleAllProcesses = (event) => {
+    if (event.target.checked) {
+      // Seleccionar todos los procesos
+      selectedProcesses.value = procesos.value.map(proceso => proceso.id);
+    } else {
+      // Deseleccionar todos
+      selectedProcesses.value = [];
+    }
+  };
+  
   // Función para obtener los parámetros de la API
   const getApiParams = () => {
     // Crear un objeto con todos los parámetros necesarios para la API
@@ -294,42 +312,15 @@
       format: 'json'
     };
   
-    console.log('Lugar seleccionado:')
-    console.log(selectedPlace.value)
-    console.log(selectedPlace.id)
-    console.log(selectedPlace.key)
-
-    // Añadir el ID del lugar si está seleccionado
-    if (selectedPlace.value !== -1) {
-      params.lugar = selectedPlace.value;
-    }
-
-    if (selectedStrategy.value !== -1) {
-      params.estrategia = selectedStrategy.value;
+    // Añadir los IDs de procesos seleccionados si hay alguno
+    if (selectedProcesses.value.length > 0) {
+      params.procesos = selectedProcesses.value.join(',');
+    } else {
+      params.procesos = '-1'; // Valor para "Todos"
     }
   
-    // Añadir fechas de inicio y fin si están definidas en el rango de fechas
-    if (dateRange.value.from && dateRange.value.to) {
-      // Convertir las fechas a objetos Date
-      const fromDate = new Date(dateRange.value.from);
-      const toDate = new Date(dateRange.value.to);
-      
-      // Formatear fechas para la API en formato YYYY-MM-DD
-      params.finicio = fromDate.toISOString().split('T')[0];
-      params.ffin = toDate.toISOString().split('T')[0];
-      
-      console.log(`Usando fechas del calendario: ${params.finicio} a ${params.ffin}`);
-    }
-  
-    // Añadir mes y año solo si no son "Todos" y no hay fechas específicas seleccionadas
-    if (!dateRange.value.from && !dateRange.value.to) {
-      if (selectedMonth.value !== -1) {
-        params.mes = selectedMonth.value + 1;
-      }
-  
-      if (selectedYear.value !== 'Todos') {
-        params.anno = selectedYear.value;
-      }
+    if (selectedYear.value !== 'Todos') {
+      params.anno = selectedYear.value;
     }
   
     // Recopilar los tipos de actividad seleccionados - pasar valores booleanos explícitamente
@@ -367,18 +358,6 @@
   
     // Forzar actualización del panel de Grafana
     const params = getApiParams();
-    
-    // Asegurarse de que las fechas se pasen correctamente si están definidas
-    if (dateRange.value.from && dateRange.value.to) {
-      const fromDate = new Date(dateRange.value.from);
-      const toDate = new Date(dateRange.value.to);
-      
-      // Corregir los nombres de los parámetros
-      params.finicio = fromDate.toISOString().split('T')[0];
-      params.ffin = toDate.toISOString().split('T')[0];
-      
-      console.log('Fechas explícitamente establecidas:', params.finicio, params.ffin);
-    }
     
     dashboardStore.updateApiParams(params);
   
@@ -449,7 +428,7 @@
       const token = apiToken.value;
       
       // URL base de la API - eliminar la barra final para consistencia
-      const baseUrl = 'http://localhost:8001/v1/dashboard/cantidad_actividades_lugares_estrategias';
+      const baseUrl = 'http://localhost:8001/v1/dashboard/cantidad_actividades_procesos';
       
       console.log('Realizando petición a:', baseUrl);
       console.log('Parámetros enviados:', params);
@@ -551,40 +530,21 @@
   };
   
   // Función para cargar los lugares desde la API
-  const fetchLugares = async () => {
+  const fetchProcesos = async () => {
     try {
       const token = apiToken.value;
-      const response = await axios.get('http://localhost:8001/v1/lugar/', {
+      const response = await axios.get('http://localhost:8001/v1/procesos/', {
         headers: {
           'Authorization': `Token ${token}`
         }
       });
       
-      console.log('Lugares obtenidos:', response.data);
-      lugares.value = response.data;
+      console.log('Procesos obtenidos:', response.data);
+      procesos.value = response.data;
     } catch (error) {
-      console.error('Error al obtener lugares:', error);
+      console.error('Error al obtener procesos:', error);
       console.error('Detalles del error:', error.response ? error.response.data : error.message);
       lugares.value = []; // Asegurar que lugares sea un array vacío en caso de error
-    }
-  };
-
-  // Función para cargar los lugares desde la API
-  const fetchEstrategias = async () => {
-    try {
-      const token = apiToken.value;
-      const response = await axios.get('http://localhost:8001/v1/estrategias/', {
-        headers: {
-          'Authorization': `Token ${token}`
-        }
-      });
-      
-      console.log('Estrategias obtenidas:', response.data);
-      estrategias.value = response.data;
-    } catch (error) {
-      console.error('Error al obtener estrategias:', error);
-      console.error('Detalles del error:', error.response ? error.response.data : error.message);
-      estrategias.value = []; // Asegurar que lugares sea un array vacío en caso de error
     }
   };
   
@@ -596,8 +556,7 @@
       console.log('Token API disponible:', apiToken.value.substring(0, 5) + '...');
       
       // Cargar lugares desde la API
-      fetchLugares();
-      fetchEstrategias();
+      fetchProcesos();
       
       // Set current month in the month selector
       const now = new Date();
@@ -848,4 +807,34 @@
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
   }
+
+  
+/* Estilos para el selector múltiple de procesos */
+.multi-select-container {
+  border: 1px solid #d1d3e2;
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: white;
+}
+
+.select-all-option {
+  padding: 8px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.select-all-option input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+.multi-select-options {
+  padding: 8px;
+}
+
+.multi-select-options .checkbox-item {
+  padding: 4px 0;
+}
   </style>
